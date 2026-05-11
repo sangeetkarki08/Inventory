@@ -1,0 +1,62 @@
+// =============================================================================
+//  SIDEBAR PATCH — adds "Balance" link to the sidebar
+//
+//  In your file: components/sidebar.tsx (or wherever your nav links are
+//  defined; likely the same file with the existing links to /dashboard,
+//  /companies, /sites, etc.)
+//
+//  1. Add the Scale icon to the lucide-react imports (top of file):
+// =============================================================================
+
+// CHANGE THIS:
+// import { LayoutDashboard, Building2, MapPin, Wrench, Package, ArrowDownToLine, ArrowUpFromLine, ClipboardList, BarChart3, Settings } from 'lucide-react';
+
+// TO THIS (add `Scale`):
+import {
+  LayoutDashboard, Building2, MapPin, Wrench, Package,
+  ArrowDownToLine, ArrowUpFromLine, ClipboardList, BarChart3, Settings,
+  Scale,
+} from 'lucide-react';
+
+// =============================================================================
+//  2. Find the NAV_LINKS array (or whatever your nav config is named).
+//
+//  Add a new entry for Balance. The exact location depends on where you want
+//  it in the sidebar. I recommend putting it right AFTER "Stock OUT" since
+//  Balance is a summary view of stock movements:
+// =============================================================================
+
+// Example — your existing array probably looks something like this:
+const NAV_LINKS = [
+  // ── OVERVIEW ──
+  { section: 'OVERVIEW',   href: '/dashboard',       icon: LayoutDashboard, label: 'Dashboard' },
+
+  // ── ORGANIZATION ──
+  { section: 'ORGANIZATION', href: '/companies',     icon: Building2,       label: 'Companies & Projects' },
+  { href: '/sites',          icon: MapPin,           label: 'Sites & Locations' },
+  { href: '/equipment',      icon: Wrench,           label: 'Equipment' },
+
+  // ── INVENTORY ──
+  { section: 'INVENTORY',   href: '/items',          icon: Package,         label: 'Item Master' },
+  { href: '/stock-in',       icon: ArrowDownToLine,  label: 'Stock IN' },
+  { href: '/stock-out',      icon: ArrowUpFromLine,  label: 'Stock OUT' },
+
+  // ── ADD THIS NEW LINE ──
+  { href: '/balance',        icon: Scale,            label: 'Balance' },
+
+  // ── PROCUREMENT ──
+  { section: 'PROCUREMENT', href: '/purchase-orders', icon: ClipboardList,  label: 'Purchase Orders' },
+
+  // ── INSIGHTS ──
+  { section: 'INSIGHTS',    href: '/reports',        icon: BarChart3,       label: 'Reports' },
+
+  // ── SYSTEM ──
+  { section: 'SYSTEM',      href: '/settings',       icon: Settings,        label: 'Settings' },
+];
+
+// =============================================================================
+//  Note: your actual sidebar file may use a different structure (e.g.
+//  hardcoded JSX <Link> elements instead of an array). In that case, just
+//  add a new <Link> for Balance in the same style as your other links,
+//  right after the Stock OUT link. Use the Scale icon.
+// =============================================================================

@@ -1,0 +1,120 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-bg text-text;
+    /* Combined: subtle radial accents + a faint dot grid pattern overlay. */
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgb(245 158 11 / 0.10), transparent),
+      radial-gradient(ellipse 50% 80% at 100% 0%,  rgb(96 165 250 / 0.05), transparent),
+      radial-gradient(circle, rgb(255 255 255 / 0.025) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 24px 24px;
+    background-attachment: fixed, fixed, fixed;
+    background-position: 0 0, 0 0, 0 0;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11', 'tnum';
+  }
+
+  /* Tabular numerals globally for any number-heavy element. */
+  table, .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  h1 { letter-spacing: -0.025em; }
+  h2 { letter-spacing: -0.018em; }
+  h3 { letter-spacing: -0.015em; }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: theme('colors.border');
+    border-radius: 5px;
+    border: 2px solid theme('colors.bg');
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: theme('colors.muted');
+  }
+
+  ::selection {
+    background: rgb(245 158 11 / 0.30);
+    color: theme('colors.text');
+  }
+
+  *:focus-visible {
+    outline: 2px solid theme('colors.accent');
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+@layer components {
+  /* ── Card foundations ──────────────────────────────────────────────────── */
+  .card {
+    @apply bg-panel border border-border rounded-2xl shadow-panel;
+  }
+
+  .card-elevated {
+    @apply bg-gradient-panel border border-border rounded-2xl shadow-lifted;
+  }
+
+  /* Hover-lift card. Subtle scale and shadow on hover. */
+  .card-hover {
+    @apply transition-all duration-200;
+  }
+  .card-hover:hover {
+    @apply shadow-lifted -translate-y-0.5;
+  }
+
+  /* ── KPI / Stat card with colored gradient and matching glow ───────────── */
+  .stat-card {
+    @apply relative overflow-hidden bg-panel border border-border rounded-2xl p-5 transition-all duration-200;
+  }
+  .stat-card::before {
+    content: '';
+    @apply absolute inset-0 opacity-50 pointer-events-none transition-opacity duration-300;
+    background-image: radial-gradient(circle at top right, var(--stat-glow, transparent), transparent 60%);
+  }
+  .stat-card:hover::before {
+    @apply opacity-100;
+  }
+
+  /* ── Zebra-striped table rows ──────────────────────────────────────────── */
+  .table-zebra tbody tr:nth-child(even) {
+    background-color: rgb(22 27 38 / 0.4); /* surface @ 40% */
+  }
+  .table-zebra tbody tr:hover {
+    background-color: theme('colors.surface');
+  }
+
+  /* Compact table row hover (for non-zebra tables) */
+  .table-row-hover {
+    @apply transition-colors hover:bg-surface;
+  }
+
+  /* ── Section heading with subtitle pill ────────────────────────────────── */
+  .section-heading {
+    @apply mb-6 flex items-start justify-between gap-4 flex-wrap;
+  }
+
+  /* ── Pill / chip ───────────────────────────────────────────────────────── */
+  .pill {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  .pill-success { @apply bg-success/15 text-success; }
+  .pill-info    { @apply bg-info/15 text-info; }
+  .pill-amber   { @apply bg-accent/15 text-accent; }
+  .pill-danger  { @apply bg-danger/15 text-danger; }
+  .pill-muted   { @apply bg-border/40 text-muted; }
+}
