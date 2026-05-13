@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🏗️ ConstructionIMS v2 — Inventory & Store Management</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ════ LOGIN ════ -->
+<div id="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">
+      <span class="icon">🏗️</span>
+      <h1>ConstructionIMS</h1>
+      <p>Offline Construction Inventory & Store Management</p>
+    </div>
+    <form id="login-form">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" name="username" value="admin" autocomplete="username" required>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" name="password" value="admin123" autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="login-btn">Login →</button>
+      <div id="login-error"></div>
+    </form>
+    <div class="login-footer">Default: admin / admin123 &nbsp;·&nbsp; 100% Offline · IndexedDB</div>
+  </div>
+</div>
+
+<!-- ════ APP ════ -->
+<div id="app" style="display:none">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">🏗️</span>
+      <div class="logo-text">ConstructionIMS<div class="logo-sub">v2 — Store Management</div></div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">Overview</div>
+      <a data-page="dashboard"><span class="nav-icon">📊</span> Dashboard</a>
+
+      <div class="nav-section">Organization</div>
+      <a data-page="company-project"><span class="nav-icon">🏢</span> Company & Project</a>
+      <a data-page="sites"><span class="nav-icon">📍</span> Sites & Locations</a>
+      <a data-page="equipment"><span class="nav-icon">⚙️</span> Equipment</a>
+
+      <div class="nav-section">Inventory</div>
+      <a data-page="items"><span class="nav-icon">🗂️</span> Item Master</a>
+      <a data-page="stock-in"><span class="nav-icon">📥</span> Stock IN</a>
+      <a data-page="stock-out"><span class="nav-icon">📤</span> Stock OUT</a>
+      <a data-page="tool-tracker"><span class="nav-icon">🔨</span> Tool Tracker</a>
+
+      <div class="nav-section">Procurement</div>
+      <a data-page="po-generator"><span class="nav-icon">🤖</span> PO Generator</a>
+      <a data-page="purchase-orders"><span class="nav-icon">📋</span> Purchase Orders</a>
+
+      <div class="nav-section">Insights</div>
+      <a data-page="reports"><span class="nav-icon">📈</span> Reports</a>
+
+      <div class="nav-section">System</div>
+      <a data-page="settings"><span class="nav-icon">🔧</span> Settings</a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar">A</div>
+        <div class="user-info">
+          <div id="user-name">Administrator</div>
+          <div id="user-role">Admin</div>
+        </div>
+        <button id="btn-logout" title="Logout">⏻</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-area">
+    <header class="main-header">
+      <button id="hamburger">☰</button>
+      <h1 id="page-title">Dashboard</h1>
+    </header>
+    <div id="main-content"><div class="loading"><div class="loader"></div> Initializing…</div></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="modal-overlay">
+  <div id="modal-box">
+    <div class="modal-header">
+      <h2 id="modal-title">Dialog</h2>
+      <button class="modal-close" onclick="app.closeModal()">✕</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<!-- TOASTS -->
+<div id="toast-container"></div>
+
+<script src="js/db.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

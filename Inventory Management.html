@@ -1,0 +1,3133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🏗️ ConstructionIMS v2 — Inventory & Store Management</title>
+  <meta name="description" content="Offline construction inventory and store management. Runs entirely in your browser.">
+  <style>
+/* ==========================================================================
+   ConstructionIMS v2 — Stylesheet
+   Industrial-professional aesthetic. Dark sidebar + warm amber accents.
+   ========================================================================== */
+
+/* ---------- Tokens ---------- */
+:root{
+  --bg:           #f5f3ef;
+  --bg-card:      #ffffff;
+  --bg-elev:     #fafaf7;
+  --ink:          #1a1a1a;
+  --ink-2:        #4a4a4a;
+  --ink-3:        #7a7a7a;
+  --ink-4:        #b0b0b0;
+  --line:         #e4e1da;
+  --line-2:       #d2cec5;
+
+  --sidebar-bg:   #1c1f24;
+  --sidebar-hov:  #262a31;
+  --sidebar-ink:  #c5c8cc;
+  --sidebar-mute: #777b82;
+  --sidebar-line: #2a2e35;
+
+  --amber:        #d97706;
+  --amber-2:      #b45309;
+  --amber-soft:   #fef3c7;
+  --green:        #15803d;
+  --green-soft:   #dcfce7;
+  --red:          #b91c1c;
+  --red-soft:     #fee2e2;
+  --blue:         #1d4ed8;
+  --blue-soft:    #dbeafe;
+  --purple:       #6b21a8;
+  --purple-soft:  #f3e8ff;
+
+  --radius:       8px;
+  --radius-sm:    6px;
+  --radius-lg:    14px;
+  --shadow-sm:    0 1px 2px rgba(0,0,0,.05);
+  --shadow:       0 4px 14px rgba(0,0,0,.07);
+  --shadow-lg:    0 20px 60px rgba(0,0,0,.18);
+
+  --font-display: "IBM Plex Serif", "Source Serif Pro", Georgia, serif;
+  --font-body:    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono:    "JetBrains Mono", "SF Mono", Consolas, monospace;
+}
+
+*{ box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body{
+  height: 100%;
+  font-family: var(--font-body);
+  color: var(--ink);
+  background: var(--bg);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+button{ font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+input, select, textarea{ font-family: inherit; font-size: inherit; color: inherit; }
+a{ color: inherit; text-decoration: none; cursor: pointer; }
+table{ border-collapse: collapse; width: 100%; }
+
+/* ---------- Login ---------- */
+#login-overlay{
+  position: fixed; inset: 0; z-index: 9000;
+  background:
+    radial-gradient(at 20% 30%, rgba(217,119,6,.15), transparent 50%),
+    radial-gradient(at 80% 70%, rgba(29,78,216,.10), transparent 50%),
+    linear-gradient(135deg, #1c1f24 0%, #2a2e35 100%);
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+}
+.login-card{
+  width: 100%; max-width: 420px;
+  background: var(--bg-card); border-radius: var(--radius-lg);
+  padding: 40px 36px; box-shadow: var(--shadow-lg);
+  border: 1px solid rgba(255,255,255,.08);
+}
+.login-logo{ text-align: center; margin-bottom: 32px; }
+.login-logo .icon{ font-size: 48px; display: block; margin-bottom: 12px; }
+.login-logo h1{
+  font-family: var(--font-display);
+  font-size: 28px; font-weight: 600; letter-spacing: -.5px;
+}
+.login-logo p{ color: var(--ink-3); margin-top: 6px; font-size: 13px; }
+
+.form-group{ margin-bottom: 16px; }
+.form-group label{
+  display: block; font-size: 12px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .5px;
+  color: var(--ink-2); margin-bottom: 6px;
+}
+.form-group input, .form-group select, .form-group textarea{
+  width: 100%; padding: 11px 13px;
+  background: var(--bg-elev);
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  transition: border-color .15s, background .15s;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus{
+  outline: none; border-color: var(--amber); background: var(--bg-card);
+}
+.form-group textarea{ resize: vertical; min-height: 80px; }
+
+.login-btn{
+  width: 100%; padding: 12px;
+  background: var(--ink); color: white;
+  border-radius: var(--radius-sm); font-weight: 600;
+  letter-spacing: .3px; transition: background .15s, transform .1s;
+  margin-top: 6px;
+}
+.login-btn:hover{ background: var(--amber-2); }
+.login-btn:active{ transform: translateY(1px); }
+
+#login-error{
+  color: var(--red); font-size: 13px; margin-top: 12px;
+  text-align: center; min-height: 18px;
+}
+.login-footer{
+  margin-top: 24px; text-align: center;
+  font-size: 11px; color: var(--ink-4);
+  border-top: 1px solid var(--line); padding-top: 16px;
+}
+
+/* ---------- App layout ---------- */
+#app{ display: flex; min-height: 100vh; }
+
+/* ---------- Sidebar ---------- */
+#sidebar{
+  width: 260px; flex-shrink: 0;
+  background: var(--sidebar-bg); color: var(--sidebar-ink);
+  display: flex; flex-direction: column;
+  position: sticky; top: 0; height: 100vh;
+  border-right: 1px solid var(--sidebar-line);
+}
+.sidebar-logo{
+  padding: 22px 20px;
+  display: flex; align-items: center; gap: 12px;
+  border-bottom: 1px solid var(--sidebar-line);
+}
+.logo-icon{ font-size: 28px; }
+.logo-text{
+  font-family: var(--font-display);
+  font-size: 18px; font-weight: 600; letter-spacing: -.3px;
+  color: white;
+}
+.logo-sub{
+  font-family: var(--font-body);
+  font-size: 10px; font-weight: 400;
+  color: var(--sidebar-mute);
+  text-transform: uppercase; letter-spacing: .8px;
+  margin-top: 2px;
+}
+
+.sidebar-nav{ flex: 1; overflow-y: auto; padding: 12px 0; }
+.sidebar-nav::-webkit-scrollbar{ width: 6px; }
+.sidebar-nav::-webkit-scrollbar-thumb{ background: var(--sidebar-line); border-radius: 3px; }
+
+.nav-section{
+  padding: 14px 20px 6px;
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1.1px;
+  color: var(--sidebar-mute);
+}
+.sidebar-nav a{
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 20px; font-size: 13.5px;
+  color: var(--sidebar-ink);
+  border-left: 3px solid transparent;
+  transition: background .12s, color .12s, border-color .12s;
+}
+.sidebar-nav a:hover{ background: var(--sidebar-hov); color: white; }
+.sidebar-nav a.active{
+  background: var(--sidebar-hov);
+  color: white;
+  border-left-color: var(--amber);
+}
+.nav-icon{ font-size: 16px; width: 20px; text-align: center; }
+
+.sidebar-footer{ padding: 14px 16px; border-top: 1px solid var(--sidebar-line); }
+.user-card{ display: flex; align-items: center; gap: 10px; }
+.user-avatar{
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--amber); color: white;
+  display: grid; place-items: center;
+  font-weight: 700; font-size: 14px;
+}
+.user-info{ flex: 1; min-width: 0; }
+#user-name{ font-size: 13px; font-weight: 600; color: white; }
+#user-role{ font-size: 11px; color: var(--sidebar-mute); }
+#btn-logout{
+  padding: 6px 9px; font-size: 16px;
+  color: var(--sidebar-mute); border-radius: 4px;
+}
+#btn-logout:hover{ color: var(--red); background: var(--sidebar-hov); }
+
+/* ---------- Main area ---------- */
+.main-area{ flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.main-header{
+  background: var(--bg-card);
+  padding: 18px 32px;
+  border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; gap: 16px;
+  position: sticky; top: 0; z-index: 100;
+}
+#hamburger{ display: none; font-size: 22px; padding: 6px 10px; }
+#page-title{
+  font-family: var(--font-display);
+  font-size: 22px; font-weight: 600; letter-spacing: -.3px;
+}
+#main-content{ padding: 28px 32px; flex: 1; }
+
+.loading{
+  display: flex; align-items: center; gap: 12px;
+  color: var(--ink-3); padding: 30px;
+}
+.loader{
+  width: 20px; height: 20px;
+  border: 2px solid var(--line-2); border-top-color: var(--amber);
+  border-radius: 50%;
+  animation: spin .9s linear infinite;
+}
+@keyframes spin{ to { transform: rotate(360deg); } }
+
+/* ---------- Page header inside content ---------- */
+.page-header{
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 22px; flex-wrap: wrap; gap: 12px;
+}
+.page-header h2{
+  font-family: var(--font-display);
+  font-size: 18px; font-weight: 600;
+}
+.page-header p{ color: var(--ink-3); font-size: 13px; }
+.page-actions{ display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* ---------- Buttons ---------- */
+.btn{
+  padding: 9px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid transparent;
+  transition: background .12s, border-color .12s, transform .08s, color .12s;
+  white-space: nowrap;
+}
+.btn:active{ transform: translateY(1px); }
+.btn-primary{ background: var(--ink); color: white; }
+.btn-primary:hover{ background: var(--amber-2); }
+.btn-secondary{
+  background: var(--bg-card); color: var(--ink);
+  border-color: var(--line-2);
+}
+.btn-secondary:hover{ background: var(--bg-elev); border-color: var(--ink-4); }
+.btn-danger{ background: var(--red); color: white; }
+.btn-danger:hover{ background: #991b1b; }
+.btn-success{ background: var(--green); color: white; }
+.btn-success:hover{ background: #166534; }
+.btn-sm{ padding: 5px 10px; font-size: 12px; }
+.btn-icon{
+  padding: 6px 9px; font-size: 14px;
+  background: transparent; color: var(--ink-2);
+  border: 1px solid var(--line);
+}
+.btn-icon:hover{ background: var(--bg-elev); color: var(--ink); }
+.btn-icon.danger:hover{ color: var(--red); border-color: var(--red); }
+
+/* ---------- Cards ---------- */
+.card{
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 22px;
+  box-shadow: var(--shadow-sm);
+}
+.card-title{
+  font-family: var(--font-display);
+  font-size: 15px; font-weight: 600;
+  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+/* ---------- Stats grid (dashboard) ---------- */
+.stats-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 16px; margin-bottom: 26px;
+}
+.stat-card{
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  position: relative; overflow: hidden;
+  transition: transform .15s, box-shadow .15s;
+}
+.stat-card:hover{ transform: translateY(-2px); box-shadow: var(--shadow); }
+.stat-card::before{
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px; background: var(--amber);
+}
+.stat-card.stat-blue::before{ background: var(--blue); }
+.stat-card.stat-green::before{ background: var(--green); }
+.stat-card.stat-red::before{ background: var(--red); }
+.stat-card.stat-purple::before{ background: var(--purple); }
+
+.stat-label{
+  font-size: 11px; text-transform: uppercase; letter-spacing: .8px;
+  color: var(--ink-3); font-weight: 600; margin-bottom: 6px;
+}
+.stat-value{
+  font-family: var(--font-display);
+  font-size: 28px; font-weight: 600; line-height: 1.1;
+}
+.stat-meta{ font-size: 11px; color: var(--ink-3); margin-top: 6px; }
+.stat-icon{
+  position: absolute; right: 16px; top: 18px;
+  font-size: 24px; opacity: .25;
+}
+
+/* ---------- Dashboard layouts ---------- */
+.dashboard-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+/* ---------- Tables ---------- */
+.table-wrap{
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.table-toolbar{
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+  display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+}
+.table-search{
+  flex: 1; min-width: 200px;
+  padding: 8px 12px;
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  background: var(--bg-elev);
+}
+.table-search:focus{ outline: none; border-color: var(--amber); background: var(--bg-card); }
+
+.data-table{ font-size: 13px; }
+.data-table thead th{
+  background: var(--bg-elev);
+  padding: 11px 14px;
+  text-align: left; font-weight: 600;
+  font-size: 11px; text-transform: uppercase; letter-spacing: .6px;
+  color: var(--ink-2);
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.data-table tbody td{
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.data-table tbody tr:last-child td{ border-bottom: none; }
+.data-table tbody tr:hover{ background: var(--bg-elev); }
+.data-table .actions{ display: flex; gap: 6px; }
+
+.empty-state{
+  padding: 50px 20px;
+  text-align: center; color: var(--ink-3);
+}
+.empty-state .emoji{ font-size: 42px; display: block; margin-bottom: 10px; opacity: .5; }
+.empty-state h3{
+  font-family: var(--font-display);
+  font-size: 16px; font-weight: 600; color: var(--ink-2);
+  margin-bottom: 4px;
+}
+
+/* ---------- Badges ---------- */
+.badge{
+  display: inline-block;
+  padding: 3px 9px;
+  font-size: 11px; font-weight: 600;
+  border-radius: 12px;
+  text-transform: uppercase; letter-spacing: .4px;
+}
+.badge-green{ background: var(--green-soft); color: var(--green); }
+.badge-red{ background: var(--red-soft); color: var(--red); }
+.badge-amber{ background: var(--amber-soft); color: var(--amber-2); }
+.badge-blue{ background: var(--blue-soft); color: var(--blue); }
+.badge-purple{ background: var(--purple-soft); color: var(--purple); }
+.badge-gray{ background: var(--bg-elev); color: var(--ink-2); border: 1px solid var(--line); }
+
+/* ---------- Modal ---------- */
+#modal-overlay{
+  position: fixed; inset: 0; z-index: 8000;
+  background: rgba(28,31,36,.55);
+  backdrop-filter: blur(4px);
+  display: none; align-items: center; justify-content: center;
+  padding: 20px;
+}
+#modal-overlay.active{ display: flex; }
+#modal-box{
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  width: 100%; max-width: 560px;
+  max-height: 90vh; overflow: hidden;
+  display: flex; flex-direction: column;
+  box-shadow: var(--shadow-lg);
+  animation: modalIn .2s ease-out;
+}
+#modal-box.wide{ max-width: 800px; }
+@keyframes modalIn{
+  from{ opacity: 0; transform: translateY(20px) scale(.97); }
+  to  { opacity: 1; transform: translateY(0) scale(1); }
+}
+.modal-header{
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--line);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.modal-header h2{
+  font-family: var(--font-display);
+  font-size: 17px; font-weight: 600;
+}
+.modal-close{
+  font-size: 18px; padding: 4px 8px;
+  color: var(--ink-3); border-radius: 4px;
+}
+.modal-close:hover{ color: var(--ink); background: var(--bg-elev); }
+#modal-body{ padding: 22px; overflow-y: auto; }
+
+.form-row{ display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-row-3{ display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+.modal-actions{
+  display: flex; justify-content: flex-end; gap: 10px;
+  margin-top: 20px; padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+/* ---------- Toasts ---------- */
+#toast-container{
+  position: fixed; top: 20px; right: 20px; z-index: 10000;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.toast{
+  background: var(--ink); color: white;
+  padding: 12px 18px; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  display: flex; align-items: center; gap: 10px;
+  animation: toastIn .25s ease-out;
+  border-left: 3px solid var(--amber);
+}
+.toast.success{ border-left-color: var(--green); }
+.toast.error{ border-left-color: var(--red); }
+.toast.warn{ border-left-color: var(--amber); }
+@keyframes toastIn{
+  from{ opacity: 0; transform: translateX(40px); }
+  to  { opacity: 1; transform: translateX(0); }
+}
+
+/* ---------- Settings / misc ---------- */
+.settings-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+.setting-card{
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 22px;
+}
+.setting-card h3{
+  font-family: var(--font-display);
+  font-size: 15px; font-weight: 600;
+  margin-bottom: 6px;
+}
+.setting-card p{
+  font-size: 12.5px; color: var(--ink-3); margin-bottom: 14px;
+}
+
+.kpi-list{ display: grid; gap: 10px; }
+.kpi-row{
+  display: flex; justify-content: space-between;
+  padding: 9px 0; border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
+.kpi-row:last-child{ border-bottom: none; }
+.kpi-row .lbl{ color: var(--ink-3); }
+.kpi-row .val{ font-weight: 600; }
+
+/* ---------- Sub-tabs ---------- */
+.tabs{
+  display: flex; gap: 4px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 20px;
+}
+.tab-btn{
+  padding: 10px 18px;
+  font-size: 13px; font-weight: 500;
+  color: var(--ink-3);
+  border-bottom: 2px solid transparent;
+  transition: color .12s, border-color .12s;
+}
+.tab-btn:hover{ color: var(--ink); }
+.tab-btn.active{ color: var(--amber-2); border-bottom-color: var(--amber); font-weight: 600; }
+
+/* ---------- Tool tracker pill ---------- */
+.row-tag{
+  font-size: 11px; color: var(--ink-3);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px){
+  #sidebar{
+    position: fixed; left: -280px; top: 0;
+    z-index: 200; transition: left .25s;
+    height: 100vh;
+  }
+  #sidebar.open{ left: 0; }
+  #hamburger{ display: block; }
+  #main-content{ padding: 18px; }
+  .main-header{ padding: 14px 18px; }
+  .form-row, .form-row-3{ grid-template-columns: 1fr; }
+}
+
+/* Print */
+@media print{
+  #sidebar, .main-header, .page-actions, .table-toolbar{ display: none !important; }
+  body{ background: white; }
+  .card, .table-wrap{ border: 1px solid #ddd; box-shadow: none; }
+}
+
+/* ==========================================================================
+   Premium Dashboard
+   ========================================================================== */
+
+.dash-welcome {
+  background: linear-gradient(135deg, #1c1f24 0%, #2a2e35 60%, #1c1f24 100%);
+  border-radius: 16px;
+  padding: 28px 32px;
+  margin-bottom: 22px;
+  color: white;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+.dash-welcome::before {
+  content: "";
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 280px; height: 280px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(217,119,6,.22), transparent 60%);
+  pointer-events: none;
+}
+.dash-welcome::after {
+  content: "";
+  position: absolute;
+  bottom: -60px; left: -60px;
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(29,78,216,.12), transparent 60%);
+  pointer-events: none;
+}
+.welcome-content { position: relative; z-index: 1; }
+.welcome-content h2 {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 6px;
+  letter-spacing: -.3px;
+}
+.welcome-content p {
+  color: rgba(255,255,255,.65);
+  font-size: 13px;
+}
+.welcome-actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-light {
+  background: rgba(255,255,255,.08);
+  color: white;
+  border: 1px solid rgba(255,255,255,.15);
+  backdrop-filter: blur(6px);
+}
+.btn-light:hover { background: rgba(255,255,255,.15); border-color: rgba(255,255,255,.25); }
+
+.btn-amber {
+  background: var(--amber);
+  color: white;
+  box-shadow: 0 4px 14px rgba(217,119,6,.35);
+}
+.btn-amber:hover { background: var(--amber-2); box-shadow: 0 6px 18px rgba(217,119,6,.45); }
+
+/* Premium stat cards */
+.dash-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin-bottom: 22px;
+}
+.premium-stat {
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 22px 24px;
+  position: relative;
+  overflow: hidden;
+  transition: transform .2s, box-shadow .2s, border-color .2s;
+}
+.premium-stat:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(0,0,0,.07);
+  border-color: var(--line-2);
+}
+.premium-stat .icon-bg {
+  position: absolute;
+  right: -16px; top: -16px;
+  width: 90px; height: 90px;
+  border-radius: 50%;
+  background: var(--amber-soft);
+  display: grid;
+  place-items: center;
+  font-size: 28px;
+  opacity: .55;
+}
+.premium-stat .label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--ink-3);
+  font-weight: 600;
+  margin-bottom: 10px;
+  position: relative;
+}
+.premium-stat .value {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -.5px;
+  line-height: 1.1;
+  position: relative;
+}
+.premium-stat .trend {
+  margin-top: 10px;
+  font-size: 11.5px;
+  color: var(--ink-3);
+  position: relative;
+}
+.premium-stat.blue .icon-bg  { background: var(--blue-soft); }
+.premium-stat.green .icon-bg { background: var(--green-soft); }
+.premium-stat.red .icon-bg   { background: var(--red-soft); }
+.premium-stat.purple .icon-bg{ background: var(--purple-soft); }
+.premium-stat.amber .icon-bg { background: var(--amber-soft); }
+
+/* Balance summary band */
+.dash-balance {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  margin-bottom: 22px;
+  background: linear-gradient(135deg, #1c1f24 0%, #262a31 100%);
+  border-radius: 14px;
+  padding: 26px 32px;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+.dash-balance::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(at 80% 50%, rgba(217,119,6,.10), transparent 60%);
+  pointer-events: none;
+}
+.balance-item {
+  position: relative;
+  padding: 0 24px;
+  border-right: 1px solid rgba(255,255,255,.08);
+  z-index: 1;
+}
+.balance-item:first-child { padding-left: 0; }
+.balance-item:last-child  { border-right: none; padding-right: 0; }
+.balance-item .icon-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.balance-item .icon-row .ico {
+  width: 28px; height: 28px;
+  border-radius: 7px;
+  display: grid; place-items: center;
+  font-size: 14px;
+}
+.balance-item.in  .ico { background: rgba(21,128,61,.25); color: #4ade80; }
+.balance-item.out .ico { background: rgba(185,28,28,.25); color: #f87171; }
+.balance-item.bal .ico { background: rgba(217,119,6,.25); color: #fbbf24; }
+.balance-item .lbl {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: rgba(255,255,255,.55);
+  font-weight: 600;
+}
+.balance-item .val {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -.4px;
+  line-height: 1.2;
+}
+.balance-item .sub {
+  font-size: 11.5px;
+  color: rgba(255,255,255,.45);
+  margin-top: 4px;
+}
+.balance-item.bal .val { color: var(--amber); }
+
+/* Charts row */
+.dash-charts {
+  display: grid;
+  grid-template-columns: 1.8fr 1fr;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+.dash-card {
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 22px 24px;
+}
+.dash-card h3 {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.dash-card h3 .badge-soft {
+  background: var(--bg-elev);
+  color: var(--ink-3);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+.chart-svg { width: 100%; height: auto; display: block; }
+.chart-legend {
+  display: flex;
+  gap: 18px;
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--ink-3);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.chart-legend i {
+  display: inline-block;
+  width: 10px; height: 10px;
+  border-radius: 2px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+.chart-legend-list {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 12px;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 4px 0;
+}
+.legend-item i {
+  width: 10px; height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.legend-item span {
+  flex: 1;
+  color: var(--ink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.legend-item strong { color: var(--ink); font-size: 12.5px; }
+
+/* Bottom 3-column grid */
+.dash-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 22px;
+}
+.activity-item {
+  display: flex;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--line);
+}
+.activity-item:last-child { border-bottom: none; }
+.activity-icon {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.activity-icon.in  { background: var(--green-soft); color: var(--green); }
+.activity-icon.out { background: var(--red-soft);   color: var(--red); }
+.activity-icon.warn{ background: var(--amber-soft); color: var(--amber-2); }
+.activity-icon.blue{ background: var(--blue-soft);  color: var(--blue); }
+.activity-content { flex: 1; min-width: 0; }
+.activity-title { font-size: 13px; font-weight: 600; }
+.activity-meta { font-size: 11.5px; color: var(--ink-3); margin-top: 2px; }
+
+.muted {
+  color: var(--ink-3);
+  font-size: 13px;
+  text-align: center;
+  padding: 24px 0;
+}
+
+@media (max-width: 1100px) {
+  .dash-charts { grid-template-columns: 1fr; }
+  .dash-grid-3 { grid-template-columns: 1fr; }
+  .dash-balance { grid-template-columns: 1fr; padding: 22px 24px; }
+  .balance-item {
+    padding: 14px 0 !important;
+    border-right: none;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+  }
+  .balance-item:last-child { border-bottom: none; }
+}
+
+  </style>
+</head>
+<body>
+
+<div id="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">
+      <span class="icon">🏗️</span>
+      <h1>ConstructionIMS</h1>
+      <p>Offline Construction Inventory &amp; Store Management</p>
+    </div>
+    <form id="login-form">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" name="username" value="admin" autocomplete="username" required>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" name="password" value="admin123" autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="login-btn">Login →</button>
+      <div id="login-error"></div>
+    </form>
+    <div class="login-footer">Default: admin / admin123 &nbsp;·&nbsp; 100% Offline · localStorage</div>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+  <aside id="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">🏗️</span>
+      <div class="logo-text">ConstructionIMS<div class="logo-sub">v2 — Store Management</div></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Overview</div>
+      <a data-page="dashboard"><span class="nav-icon">📊</span> Dashboard</a>
+      <div class="nav-section">Organization</div>
+      <a data-page="company-project"><span class="nav-icon">🏢</span> Company &amp; Project</a>
+      <a data-page="sites"><span class="nav-icon">📍</span> Sites &amp; Locations</a>
+      <a data-page="equipment"><span class="nav-icon">⚙️</span> Equipment</a>
+      <div class="nav-section">Inventory</div>
+      <a data-page="items"><span class="nav-icon">🗂️</span> Item Master</a>
+      <a data-page="stock-in"><span class="nav-icon">📥</span> Stock IN</a>
+      <a data-page="stock-out"><span class="nav-icon">📤</span> Stock OUT</a>
+      <a data-page="tool-tracker"><span class="nav-icon">🔨</span> Tool Tracker</a>
+      <div class="nav-section">Procurement</div>
+      <a data-page="po-generator"><span class="nav-icon">🤖</span> PO Generator</a>
+      <a data-page="purchase-orders"><span class="nav-icon">📋</span> Purchase Orders</a>
+      <div class="nav-section">Insights</div>
+      <a data-page="reports"><span class="nav-icon">📈</span> Reports</a>
+      <div class="nav-section">System</div>
+      <a data-page="settings"><span class="nav-icon">🔧</span> Settings</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar">A</div>
+        <div class="user-info">
+          <div id="user-name">Administrator</div>
+          <div id="user-role">Admin</div>
+        </div>
+        <button id="btn-logout" title="Logout">⏻</button>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main-area">
+    <header class="main-header">
+      <button id="hamburger">☰</button>
+      <h1 id="page-title">Dashboard</h1>
+    </header>
+    <div id="main-content"><div class="loading"><div class="loader"></div> Initializing…</div></div>
+  </div>
+</div>
+
+<div id="modal-overlay">
+  <div id="modal-box">
+    <div class="modal-header">
+      <h2 id="modal-title">Dialog</h2>
+      <button class="modal-close" onclick="app.closeModal()">✕</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+/* ============================================================
+   ConstructionIMS v2 — bundled db.js (localStorage)
+   ============================================================ */
+/* ==========================================================================
+   ConstructionIMS v2 — db.js (localStorage edition)
+   Works on file://, http://, https:// — Chrome, Edge, Firefox, Safari, etc.
+   Same async API as before so app.js does not change.
+   ========================================================================== */
+
+const DB_NAME = "ConstructionIMS_v2";
+const DB_VERSION = 1;
+
+const STORES = [
+  ["company",        "id"],
+  ["projects",       "id"],
+  ["sites",          "id"],
+  ["locations",      "id"],
+  ["equipment",      "id"],
+  ["items",          "id"],
+  ["stockMovements", "id"],
+  ["toolIssues",     "id"],
+  ["purchaseOrders", "id"],
+  ["settings",       "key"]
+];
+
+const STORE_KEYS = Object.fromEntries(STORES.map(([n,k]) => [n,k]));
+const LS_PREFIX = "cims_v2_";
+const idKey = name => LS_PREFIX + "__nextId__" + name;
+const storeKey = name => LS_PREFIX + name;
+
+function loadStore(name){
+  try { return JSON.parse(localStorage.getItem(storeKey(name)) || "[]"); }
+  catch { return []; }
+}
+function saveStore(name, rows){
+  try { localStorage.setItem(storeKey(name), JSON.stringify(rows)); }
+  catch (e){ throw new Error("Storage full or unavailable: " + e.message); }
+}
+function nextId(name){
+  const cur = Number(localStorage.getItem(idKey(name)) || "0") + 1;
+  localStorage.setItem(idKey(name), String(cur));
+  return cur;
+}
+
+const db = {
+  async open(){
+    // Sanity-check that localStorage works in this context
+    try {
+      const t = "__cims_probe__";
+      localStorage.setItem(t, "1");
+      localStorage.removeItem(t);
+    } catch (e){
+      throw new Error("localStorage is not available. Disable private/incognito mode or allow storage for this page.");
+    }
+    return true;
+  },
+
+  add(name, obj){
+    return new Promise((res, rej) => {
+      try {
+        const key = STORE_KEYS[name];
+        const rows = loadStore(name);
+        if (key === "id" && obj.id == null) obj.id = nextId(name);
+        if (!obj.createdAt) obj.createdAt = Date.now();
+        obj.updatedAt = Date.now();
+        rows.push(obj);
+        saveStore(name, rows);
+        res(obj[key]);
+      } catch (e){ rej(e); }
+    });
+  },
+
+  put(name, obj){
+    return new Promise((res, rej) => {
+      try {
+        const key = STORE_KEYS[name];
+        const rows = loadStore(name);
+        obj.updatedAt = Date.now();
+        const idx = rows.findIndex(r => r[key] === obj[key]);
+        if (idx >= 0) rows[idx] = obj;
+        else { if (!obj.createdAt) obj.createdAt = Date.now(); rows.push(obj); }
+        saveStore(name, rows);
+        res(obj[key]);
+      } catch (e){ rej(e); }
+    });
+  },
+
+  get(name, id){
+    return new Promise(res => {
+      const key = STORE_KEYS[name];
+      const rows = loadStore(name);
+      res(rows.find(r => r[key] === id));
+    });
+  },
+
+  delete(name, id){
+    return new Promise(res => {
+      const key = STORE_KEYS[name];
+      let rows = loadStore(name);
+      rows = rows.filter(r => r[key] !== id);
+      saveStore(name, rows);
+      res(true);
+    });
+  },
+
+  all(name){
+    return new Promise(res => res(loadStore(name)));
+  },
+
+  clear(name){
+    return new Promise(res => {
+      localStorage.removeItem(storeKey(name));
+      localStorage.removeItem(idKey(name));
+      res(true);
+    });
+  },
+
+  async getSetting(key, fallback = null){
+    const row = await this.get("settings", key);
+    return row ? row.value : fallback;
+  },
+  async setSetting(key, value){
+    return this.put("settings", { key, value });
+  },
+
+  async exportAll(){
+    const dump = {};
+    for (const [name] of STORES) dump[name] = loadStore(name);
+    return {
+      app: DB_NAME, version: DB_VERSION,
+      exportedAt: new Date().toISOString(),
+      data: dump
+    };
+  },
+
+  async importAll(payload, { merge = false } = {}){
+    if (!payload || !payload.data) throw new Error("Invalid backup file");
+    for (const [name, keyPath] of STORES){
+      if (!merge){
+        localStorage.removeItem(storeKey(name));
+        localStorage.removeItem(idKey(name));
+      }
+      const rows = payload.data[name] || [];
+      const existing = loadStore(name);
+      let merged;
+      if (merge){
+        const map = new Map(existing.map(r => [r[keyPath], r]));
+        rows.forEach(r => map.set(r[keyPath], r));
+        merged = Array.from(map.values());
+      } else {
+        merged = rows;
+      }
+      saveStore(name, merged);
+      // restore the next-id counter to the max numeric id seen
+      if (keyPath === "id"){
+        const maxId = merged.reduce((m,r) => Math.max(m, Number(r.id)||0), 0);
+        localStorage.setItem(idKey(name), String(maxId));
+      }
+    }
+    return true;
+  },
+
+  async seedIfEmpty(){
+    const company = await this.get("company", 1);
+    if (!company){
+      await this.put("company", {
+        id: 1,
+        name: "Your Construction Co.",
+        address: "—",
+        phone: "",
+        email: "",
+        gst: "",
+        currency: "NPR",
+        openingBalance: 0
+      });
+    }
+    const projects = await this.all("projects");
+    if (projects.length === 0){
+      const pid = await this.add("projects", {
+        name: "Main Project",
+        client: "—",
+        startDate: new Date().toISOString().slice(0,10),
+        status: "Active",
+        notes: ""
+      });
+      const sid = await this.add("sites", {
+        projectId: pid,
+        name: "Central Store",
+        code: "SITE-01",
+        address: "—",
+        manager: ""
+      });
+      await this.add("locations", { siteId: sid, name: "Rack A", code: "A", description: "Bulk goods" });
+      await this.add("locations", { siteId: sid, name: "Rack B", code: "B", description: "Tools & small parts" });
+    }
+  }
+};
+
+window.db = db;
+
+</script>
+
+<script>
+/* ============================================================
+   ConstructionIMS v2 — bundled app.js
+   ============================================================ */
+/* ==========================================================================
+   ConstructionIMS v2 — app.js
+   Entire application logic: auth, routing, CRUD pages, reports, settings.
+   ========================================================================== */
+
+const app = {
+  state: {
+    user: null,
+    currentPage: "dashboard"
+  },
+
+  /* =========================================================
+     INIT
+  ========================================================= */
+  async init(){
+    try {
+      await db.open();
+      await db.seedIfEmpty();
+      // One-time migration: existing users on the default seed still using USD → NPR
+      const c = await db.get("company", 1);
+      if (c && c.name === "Your Construction Co." && c.currency === "USD"){
+        c.currency = "NPR";
+        await db.put("company", c);
+      }
+    } catch (e){
+      console.error(e);
+      alert("Storage is not available in this browser context.\n\n" + (e.message || e) + "\n\nTry disabling private/incognito mode, or open the file in Chrome, Edge, or Firefox.");
+      return;
+    }
+    this.bindLogin();
+    this.bindGlobal();
+
+    // auto-login if a session is stored
+    const session = sessionStorage.getItem("cims_user");
+    if (session){
+      this.state.user = JSON.parse(session);
+      this.showApp();
+    }
+  },
+
+  /* =========================================================
+     AUTH (hard-coded admin/admin123; password also stored
+     in settings store so it can be changed)
+  ========================================================= */
+  bindLogin(){
+    const form = document.getElementById("login-form");
+    form.addEventListener("submit", async e => {
+      e.preventDefault();
+      const fd = new FormData(form);
+      const u = fd.get("username").trim();
+      const p = fd.get("password");
+
+      const stored = await db.getSetting("auth", { username: "admin", password: "admin123" });
+      if (u === stored.username && p === stored.password){
+        this.state.user = { username: u, role: "Admin", name: "Administrator" };
+        sessionStorage.setItem("cims_user", JSON.stringify(this.state.user));
+        document.getElementById("login-error").textContent = "";
+        this.showApp();
+      } else {
+        document.getElementById("login-error").textContent = "Invalid credentials.";
+      }
+    });
+  },
+
+  showApp(){
+    document.getElementById("login-overlay").style.display = "none";
+    document.getElementById("app").style.display = "flex";
+    document.getElementById("user-name").textContent = this.state.user.name;
+    document.getElementById("user-role").textContent = this.state.user.role;
+    document.querySelector(".user-avatar").textContent = this.state.user.name[0].toUpperCase();
+    this.go("dashboard");
+  },
+
+  logout(){
+    sessionStorage.removeItem("cims_user");
+    this.state.user = null;
+    document.getElementById("app").style.display = "none";
+    document.getElementById("login-overlay").style.display = "flex";
+  },
+
+  /* =========================================================
+     GLOBAL BINDS
+  ========================================================= */
+  bindGlobal(){
+    document.getElementById("btn-logout").addEventListener("click", () => this.logout());
+    document.getElementById("hamburger").addEventListener("click", () => {
+      document.getElementById("sidebar").classList.toggle("open");
+    });
+    document.querySelectorAll(".sidebar-nav a").forEach(a => {
+      a.addEventListener("click", () => {
+        this.go(a.dataset.page);
+        document.getElementById("sidebar").classList.remove("open");
+      });
+    });
+    // close modal on backdrop click
+    document.getElementById("modal-overlay").addEventListener("click", e => {
+      if (e.target.id === "modal-overlay") this.closeModal();
+    });
+    // ESC closes modal
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") this.closeModal();
+    });
+  },
+
+  /* =========================================================
+     ROUTER
+  ========================================================= */
+  go(page){
+    this.state.currentPage = page;
+    document.querySelectorAll(".sidebar-nav a").forEach(a => {
+      a.classList.toggle("active", a.dataset.page === page);
+    });
+    const titles = {
+      dashboard:        "Dashboard",
+      "company-project": "Company & Projects",
+      sites:            "Sites & Locations",
+      equipment:        "Equipment Register",
+      items:            "Item Master",
+      "stock-in":       "Stock IN",
+      "stock-out":      "Stock OUT",
+      "tool-tracker":   "Tool Tracker",
+      "po-generator":   "Purchase Order Generator",
+      "purchase-orders":"Purchase Orders",
+      reports:          "Reports",
+      settings:         "Settings"
+    };
+    document.getElementById("page-title").textContent = titles[page] || "Dashboard";
+    const main = document.getElementById("main-content");
+    main.innerHTML = `<div class="loading"><div class="loader"></div> Loading…</div>`;
+    const renderers = {
+      dashboard:         () => this.renderDashboard(),
+      "company-project": () => this.renderCompanyProject(),
+      sites:             () => this.renderSites(),
+      equipment:         () => this.renderEquipment(),
+      items:             () => this.renderItems(),
+      "stock-in":        () => this.renderStockIn(),
+      "stock-out":       () => this.renderStockOut(),
+      "tool-tracker":    () => this.renderToolTracker(),
+      "po-generator":    () => this.renderPOGenerator(),
+      "purchase-orders": () => this.renderPurchaseOrders(),
+      reports:           () => this.renderReports(),
+      settings:          () => this.renderSettings()
+    };
+    (renderers[page] || renderers.dashboard)();
+  },
+
+  /* =========================================================
+     UI HELPERS
+  ========================================================= */
+  toast(msg, kind = "success"){
+    const c = document.getElementById("toast-container");
+    const t = document.createElement("div");
+    t.className = "toast " + kind;
+    const icon = kind === "error" ? "✕" : kind === "warn" ? "⚠" : kind === "info" ? "ℹ" : "✓";
+    t.innerHTML = `<span>${icon}</span> ${msg}`;
+    c.appendChild(t);
+    setTimeout(() => { t.style.opacity = "0"; t.style.transition = "opacity .2s"; }, 2400);
+    setTimeout(() => t.remove(), 2700);
+  },
+
+  openModal(title, bodyHtml, { wide = false } = {}){
+    document.getElementById("modal-title").textContent = title;
+    document.getElementById("modal-body").innerHTML = bodyHtml;
+    document.getElementById("modal-box").classList.toggle("wide", wide);
+    document.getElementById("modal-overlay").classList.add("active");
+  },
+  closeModal(){
+    document.getElementById("modal-overlay").classList.remove("active");
+  },
+
+  confirm(message, onYes, title = "Confirm"){
+    this.openModal(title, `
+      <p style="margin-bottom:18px; color:var(--ink-2);">${message}</p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="app.closeModal()">Cancel</button>
+        <button class="btn btn-danger" id="confirm-yes">Yes, proceed</button>
+      </div>
+    `);
+    document.getElementById("confirm-yes").addEventListener("click", () => {
+      this.closeModal();
+      onYes();
+    });
+  },
+
+  fmtDate(ts){
+    if (!ts) return "—";
+    const d = (typeof ts === "number") ? new Date(ts) : new Date(ts);
+    return d.toLocaleDateString();
+  },
+  fmtMoney(n, currency){
+    const cur = currency || "NPR";
+    const symbols = { USD:"$", EUR:"€", GBP:"£", INR:"₹", NPR:"₨", AED:"د.إ", SAR:"﷼" };
+    const s = symbols[cur] || (cur + " ");
+    const locale = (cur === "INR" || cur === "NPR") ? "en-IN" : undefined;
+    return s + " " + Number(n || 0).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  },
+  // compact form for big headline numbers, e.g. ₨ 12.5L or ₨ 1.2Cr
+  fmtMoneyCompact(n, currency){
+    const cur = currency || "NPR";
+    const symbols = { USD:"$", EUR:"€", GBP:"£", INR:"₹", NPR:"₨", AED:"د.إ", SAR:"﷼" };
+    const s = symbols[cur] || (cur + " ");
+    const v = Number(n || 0);
+    const abs = Math.abs(v);
+    const sign = v < 0 ? "-" : "";
+    if (cur === "INR" || cur === "NPR"){
+      if (abs >= 10000000) return `${s} ${sign}${(abs/10000000).toFixed(2)} Cr`;
+      if (abs >= 100000)   return `${s} ${sign}${(abs/100000).toFixed(2)} L`;
+      if (abs >= 1000)     return `${s} ${sign}${(abs/1000).toFixed(1)}K`;
+      return `${s} ${sign}${abs.toFixed(0)}`;
+    }
+    if (abs >= 1000000) return `${s}${sign}${(abs/1000000).toFixed(2)}M`;
+    if (abs >= 1000)    return `${s}${sign}${(abs/1000).toFixed(1)}K`;
+    return `${s}${sign}${abs.toFixed(0)}`;
+  },
+
+  // current stock for an item = sum IN - sum OUT
+  async stockOf(itemId, allMovements){
+    const movs = allMovements || await db.all("stockMovements");
+    return movs
+      .filter(m => m.itemId === itemId)
+      .reduce((acc, m) => acc + (m.type === "IN" ? m.qty : -m.qty), 0);
+  },
+
+  /* =========================================================
+     DASHBOARD
+  ========================================================= */
+  async renderDashboard(){
+    const [items, movs, pos, tools, sites, projects, company] = await Promise.all([
+      db.all("items"), db.all("stockMovements"),
+      db.all("purchaseOrders"), db.all("toolIssues"),
+      db.all("sites"), db.all("projects"),
+      db.get("company", 1)
+    ]);
+    const cur = company?.currency || "NPR";
+    const itemMap = Object.fromEntries(items.map(i => [i.id, i]));
+    const siteMap = Object.fromEntries(sites.map(s => [s.id, s]));
+
+    // Stock map: itemId -> current qty
+    const stockMap = new Map();
+    movs.forEach(m => {
+      stockMap.set(m.itemId, (stockMap.get(m.itemId) || 0) + (m.type === "IN" ? m.qty : -m.qty));
+    });
+
+    // Values: total received, issued, on-hand
+    let totalReceivedValue = 0, totalIssuedValue = 0, totalValue = 0, lowStockCount = 0;
+    movs.forEach(m => {
+      const cost = itemMap[m.itemId]?.costPrice || 0;
+      if (m.type === "IN") totalReceivedValue += m.qty * cost;
+      else                 totalIssuedValue   += m.qty * cost;
+    });
+    items.forEach(it => {
+      const s = stockMap.get(it.id) || 0;
+      totalValue += s * (it.costPrice || 0);
+      if (s <= (it.reorderLevel || 0)) lowStockCount++;
+    });
+
+    const pendingPOs = pos.filter(p => p.status === "DRAFT" || p.status === "SENT").length;
+    const toolsOut   = tools.filter(t => t.status === "ISSUED").length;
+
+    // This month's movement count
+    const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0);
+    const monthMovs  = movs.filter(m => (m.date || 0) >= monthStart.getTime());
+
+    // 30-day movement chart data
+    const days = 30;
+    const chartData = [];
+    const today = new Date(); today.setHours(0,0,0,0);
+    for (let i = days - 1; i >= 0; i--){
+      const d = new Date(today); d.setDate(d.getDate() - i);
+      const start = d.getTime(), end = start + 86400000;
+      const dayMovs = movs.filter(m => m.date >= start && m.date < end);
+      chartData.push({
+        date: d,
+        inQty:  dayMovs.filter(m => m.type === "IN").reduce((a,m) => a + m.qty, 0),
+        outQty: dayMovs.filter(m => m.type === "OUT").reduce((a,m) => a + m.qty, 0)
+      });
+    }
+
+    // Category breakdown by stock value
+    const catMap = new Map();
+    items.forEach(it => {
+      const stock = stockMap.get(it.id) || 0;
+      const val = stock * (it.costPrice || 0);
+      if (val > 0){
+        const cat = it.category || "Uncategorized";
+        catMap.set(cat, (catMap.get(cat) || 0) + val);
+      }
+    });
+    const categories = [...catMap.entries()].sort((a,b) => b[1] - a[1]).slice(0, 6);
+
+    // Top items by value
+    const topItems = items
+      .map(it => ({ it, stock: stockMap.get(it.id) || 0, value: (stockMap.get(it.id) || 0) * (it.costPrice || 0) }))
+      .filter(x => x.value > 0)
+      .sort((a,b) => b.value - a.value)
+      .slice(0, 5);
+
+    const recent = [...movs].sort((a,b) => (b.date||0) - (a.date||0)).slice(0, 6);
+    const lowStock = items
+      .map(it => ({ it, stock: stockMap.get(it.id) || 0 }))
+      .filter(x => x.stock <= (x.it.reorderLevel || 0))
+      .slice(0, 5);
+
+    const movementChart = this.svgMovementChart(chartData);
+    const categoryChart = this.svgCategoryDonut(categories, totalValue, cur);
+
+    document.getElementById("main-content").innerHTML = `
+      <!-- Welcome banner -->
+      <div class="dash-welcome">
+        <div class="welcome-content">
+          <h2>Welcome back, ${this.state.user.name} 👋</h2>
+          <p>${company?.name || ""} · ${projects.length} project${projects.length!==1?'s':''} · ${sites.length} site${sites.length!==1?'s':''} · ${items.length} item${items.length!==1?'s':''}</p>
+        </div>
+        <div class="welcome-actions">
+          <button class="btn btn-light" onclick="app.go('stock-in')">📥 Stock IN</button>
+          <button class="btn btn-amber" onclick="app.go('stock-out')">📤 Stock OUT</button>
+          <button class="btn btn-light" onclick="app.go('po-generator')">🤖 Generate PO</button>
+        </div>
+      </div>
+
+      <!-- Top stat cards -->
+      <div class="dash-stats">
+        <div class="premium-stat amber">
+          <div class="icon-bg">🗂️</div>
+          <div class="label">Total Items</div>
+          <div class="value">${items.length}</div>
+          <div class="trend">${catMap.size} categor${catMap.size===1?'y':'ies'}</div>
+        </div>
+        <div class="premium-stat blue">
+          <div class="icon-bg">💰</div>
+          <div class="label">Stock Value</div>
+          <div class="value">${this.fmtMoney(totalValue, cur)}</div>
+          <div class="trend">Current on-hand</div>
+        </div>
+        <div class="premium-stat ${lowStockCount > 0 ? 'red' : 'green'}">
+          <div class="icon-bg">${lowStockCount > 0 ? '⚠️' : '✅'}</div>
+          <div class="label">Low Stock Alerts</div>
+          <div class="value">${lowStockCount}</div>
+          <div class="trend">${lowStockCount > 0 ? 'Items below reorder' : 'All well-stocked'}</div>
+        </div>
+        <div class="premium-stat purple">
+          <div class="icon-bg">📋</div>
+          <div class="label">Pending POs</div>
+          <div class="value">${pendingPOs}</div>
+          <div class="trend">Draft + sent · ${toolsOut} tools out</div>
+        </div>
+      </div>
+
+      <!-- Balance summary band -->
+      <div class="dash-balance">
+        <div class="balance-item in">
+          <div class="icon-row"><div class="ico">📥</div><div class="lbl">Total Received</div></div>
+          <div class="val">${this.fmtMoney(totalReceivedValue, cur)}</div>
+          <div class="sub">Lifetime value of stock IN</div>
+        </div>
+        <div class="balance-item out">
+          <div class="icon-row"><div class="ico">📤</div><div class="lbl">Total Issued</div></div>
+          <div class="val">${this.fmtMoney(totalIssuedValue, cur)}</div>
+          <div class="sub">Lifetime value of stock OUT</div>
+        </div>
+        <div class="balance-item bal">
+          <div class="icon-row"><div class="ico">💎</div><div class="lbl">Current Balance</div></div>
+          <div class="val">${this.fmtMoney(totalValue, cur)}</div>
+          <div class="sub">Stock available on-hand</div>
+        </div>
+      </div>
+
+      <!-- Charts row -->
+      <div class="dash-charts">
+        <div class="dash-card">
+          <h3>📈 Stock Movement Trend <span class="badge-soft">Last 30 days · ${monthMovs.length} entries this month</span></h3>
+          ${movementChart}
+          <div class="chart-legend">
+            <span><i style="background: var(--green);"></i> Received (IN)</span>
+            <span><i style="background: var(--red);"></i> Issued (OUT)</span>
+          </div>
+        </div>
+        <div class="dash-card">
+          <h3>📊 Stock by Category</h3>
+          ${categoryChart}
+        </div>
+      </div>
+
+      <!-- Bottom 3-column grid -->
+      <div class="dash-grid-3">
+        <div class="dash-card">
+          <h3>🔁 Recent Activity <span class="badge-soft">${movs.length} total</span></h3>
+          ${recent.length === 0 ? '<div class="muted">No movements recorded yet.</div>' : recent.map(m => {
+            const item = itemMap[m.itemId];
+            return `<div class="activity-item">
+              <div class="activity-icon ${m.type.toLowerCase()}">${m.type === 'IN' ? '📥' : '📤'}</div>
+              <div class="activity-content">
+                <div class="activity-title">${item?.name || '—'} <span style="color: var(--ink-3); font-weight: 500;">· ${m.qty} ${item?.unit || ''}</span></div>
+                <div class="activity-meta">${this.fmtDate(m.date)} · ${siteMap[m.siteId]?.name || '—'}${m.refNo ? ' · '+m.refNo : ''}</div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+
+        <div class="dash-card">
+          <h3>⚠️ Low Stock Alerts <span class="badge-soft">${lowStockCount} items</span></h3>
+          ${lowStock.length === 0 ? '<div class="muted">All items well-stocked 👍</div>' : lowStock.map(({it, stock}) => `
+            <div class="activity-item">
+              <div class="activity-icon warn">⚠</div>
+              <div class="activity-content">
+                <div class="activity-title">${it.name}</div>
+                <div class="activity-meta">Stock: <strong style="color: ${stock <= 0 ? 'var(--red)' : 'var(--amber-2)'};">${stock}</strong> ${it.unit || ''} · Reorder at ${it.reorderLevel || 0}</div>
+              </div>
+            </div>
+          `).join('') + (lowStockCount > 0 ? `<div style="margin-top:12px;text-align:right;"><button class="btn btn-sm btn-secondary" onclick="app.go('po-generator')">Generate POs →</button></div>` : '')}
+        </div>
+
+        <div class="dash-card">
+          <h3>💎 Top Items by Value</h3>
+          ${topItems.length === 0 ? '<div class="muted">No stock with value yet.</div>' : topItems.map(({it, stock, value}) => `
+            <div class="activity-item">
+              <div class="activity-icon blue">💎</div>
+              <div class="activity-content">
+                <div class="activity-title">${it.name}</div>
+                <div class="activity-meta">${stock} ${it.unit || ''} × ${this.fmtMoney(it.costPrice || 0, cur)} = <strong style="color: var(--ink);">${this.fmtMoney(value, cur)}</strong></div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  },
+
+  /* =========================================================
+     SVG CHART HELPERS
+  ========================================================= */
+  svgMovementChart(data){
+    const W = 700, H = 220;
+    const padL = 36, padR = 16, padT = 16, padB = 36;
+    const innerW = W - padL - padR;
+    const innerH = H - padT - padB;
+    const maxVal = Math.max(1, ...data.flatMap(d => [d.inQty, d.outQty]));
+    const groupW = innerW / data.length;
+    const barW = Math.max(2, Math.min(groupW * 0.35, 9));
+
+    // Gridlines + Y-axis ticks
+    const yTicks = 4;
+    let grid = "";
+    for (let i = 0; i <= yTicks; i++){
+      const val = Math.round(maxVal * i / yTicks);
+      const y = padT + innerH - (innerH * i / yTicks);
+      grid += `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="${i===0?'var(--line-2)':'var(--line)'}" stroke-width="1" ${i===0?'':'stroke-dasharray="2,3"'}/>` +
+              `<text x="${padL - 6}" y="${y + 3.5}" text-anchor="end" font-size="10" fill="var(--ink-3)">${val}</text>`;
+    }
+
+    // Bars (grouped: green for IN, red for OUT)
+    let bars = "";
+    data.forEach((d, i) => {
+      const x = padL + i * groupW + groupW / 2;
+      const inH  = (d.inQty  / maxVal) * innerH;
+      const outH = (d.outQty / maxVal) * innerH;
+      if (d.inQty > 0)
+        bars += `<rect x="${x - barW - 1}" y="${padT + innerH - inH}" width="${barW}" height="${inH}" fill="var(--green)" rx="2"><title>${d.date.toDateString()}: IN ${d.inQty}</title></rect>`;
+      if (d.outQty > 0)
+        bars += `<rect x="${x + 1}" y="${padT + innerH - outH}" width="${barW}" height="${outH}" fill="var(--red)" rx="2"><title>${d.date.toDateString()}: OUT ${d.outQty}</title></rect>`;
+    });
+
+    // X-axis labels (every 5th day + last)
+    let xLabels = "";
+    data.forEach((d, i) => {
+      if (i % 5 !== 0 && i !== data.length - 1) return;
+      const x = padL + i * groupW + groupW / 2;
+      const label = (d.getMonth ? (d.getMonth()+1) : (d.date.getMonth()+1)) + "/" + (d.date.getDate ? d.date.getDate() : d.date.getDate());
+      xLabels += `<text x="${x}" y="${H - 14}" text-anchor="middle" font-size="10" fill="var(--ink-3)">${(d.date.getMonth()+1)}/${d.date.getDate()}</text>`;
+    });
+
+    return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+      ${grid}${bars}${xLabels}
+    </svg>`;
+  },
+
+  svgCategoryDonut(categories, total, cur){
+    if (categories.length === 0 || total === 0){
+      return `<div class="muted" style="padding:50px 0;">No stock to display.<br><small style="color: var(--ink-4);">Add items and stock to see the breakdown.</small></div>`;
+    }
+    const W = 220, H = 220;
+    const cx = W / 2, cy = H / 2;
+    const outerR = 88, innerR = 56;
+    const colors = ["#d97706","#1d4ed8","#15803d","#6b21a8","#b91c1c","#0e7490"];
+
+    let startAngle = -Math.PI / 2;
+    let segments = "";
+    categories.forEach(([name, value], i) => {
+      const fraction = value / total;
+      // single-segment full circle special case
+      if (fraction >= 0.9999){
+        segments += `<circle cx="${cx}" cy="${cy}" r="${outerR}" fill="${colors[i % colors.length]}"/>` +
+                    `<circle cx="${cx}" cy="${cy}" r="${innerR}" fill="white"/>`;
+        return;
+      }
+      const endAngle = startAngle + fraction * Math.PI * 2;
+      const x1 = cx + outerR * Math.cos(startAngle);
+      const y1 = cy + outerR * Math.sin(startAngle);
+      const x2 = cx + outerR * Math.cos(endAngle);
+      const y2 = cy + outerR * Math.sin(endAngle);
+      const x3 = cx + innerR * Math.cos(endAngle);
+      const y3 = cy + innerR * Math.sin(endAngle);
+      const x4 = cx + innerR * Math.cos(startAngle);
+      const y4 = cy + innerR * Math.sin(startAngle);
+      const largeArc = fraction > 0.5 ? 1 : 0;
+      const d = `M ${x1.toFixed(2)} ${y1.toFixed(2)}
+                 A ${outerR} ${outerR} 0 ${largeArc} 1 ${x2.toFixed(2)} ${y2.toFixed(2)}
+                 L ${x3.toFixed(2)} ${y3.toFixed(2)}
+                 A ${innerR} ${innerR} 0 ${largeArc} 0 ${x4.toFixed(2)} ${y4.toFixed(2)} Z`;
+      segments += `<path d="${d}" fill="${colors[i % colors.length]}" stroke="white" stroke-width="2"><title>${name}: ${this.fmtMoney(value, cur)} (${Math.round(fraction*100)}%)</title></path>`;
+      startAngle = endAngle;
+    });
+
+    const centerText = `
+      <text x="${cx}" y="${cy - 4}" text-anchor="middle" font-size="9" fill="var(--ink-3)" font-weight="600" letter-spacing="1">TOTAL</text>
+      <text x="${cx}" y="${cy + 14}" text-anchor="middle" font-size="13" fill="var(--ink)" font-weight="700" font-family="serif">${this.fmtMoney(total, cur)}</text>
+    `;
+
+    const legend = categories.map(([name, value], i) => `
+      <div class="legend-item">
+        <i style="background: ${colors[i % colors.length]};"></i>
+        <span title="${name}">${name}</span>
+        <strong>${Math.round(value/total*100)}%</strong>
+      </div>
+    `).join("");
+
+    return `
+      <svg class="chart-svg" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="max-height:220px;">${segments}${centerText}</svg>
+      <div class="chart-legend-list">${legend}</div>
+    `;
+  },
+
+  /* =========================================================
+     COMPANY & PROJECTS
+  ========================================================= */
+  async renderCompanyProject(){
+    const company = await db.get("company", 1);
+    const projects = await db.all("projects");
+
+    document.getElementById("main-content").innerHTML = `
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="company">Company Info</button>
+        <button class="tab-btn" data-tab="projects">Projects (${projects.length})</button>
+      </div>
+      <div id="tab-content"></div>
+    `;
+    const setTab = name => {
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === name));
+      if (name === "company") this._renderCompanyTab();
+      else this._renderProjectsTab();
+    };
+    document.querySelectorAll(".tab-btn").forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
+    setTab("company");
+  },
+
+  async _renderCompanyTab(){
+    const c = await db.get("company", 1) || { id: 1 };
+    document.getElementById("tab-content").innerHTML = `
+      <div class="card" style="max-width:720px;">
+        <div class="card-title">🏢 Company Information</div>
+        <form id="company-form">
+          <div class="form-row">
+            <div class="form-group"><label>Company Name</label><input name="name" value="${c.name||''}" required></div>
+            <div class="form-group"><label>Currency</label>
+              <select name="currency">
+                ${["NPR","INR","USD","EUR","GBP","AED","SAR"].map(x =>
+                  `<option ${c.currency===x?'selected':''}>${x}</option>`).join("")}
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Opening Cash Balance</label>
+            <input type="number" name="openingBalance" step="0.01" min="0" value="${c.openingBalance||0}">
+            <small style="display:block;color:var(--ink-3);font-size:11px;margin-top:4px;">Available balance is calculated as: opening balance − (received PO total).</small>
+          </div>
+          <div class="form-group"><label>Address</label><textarea name="address">${c.address||''}</textarea></div>
+          <div class="form-row">
+            <div class="form-group"><label>Phone</label><input name="phone" value="${c.phone||''}"></div>
+            <div class="form-group"><label>Email</label><input type="email" name="email" value="${c.email||''}"></div>
+          </div>
+          <div class="form-group"><label>Tax / GST Number</label><input name="gst" value="${c.gst||''}"></div>
+          <div class="modal-actions"><button type="submit" class="btn btn-primary">💾 Save Changes</button></div>
+        </form>
+      </div>
+    `;
+    document.getElementById("company-form").addEventListener("submit", async e => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const obj = { id: 1 };
+      fd.forEach((v,k) => obj[k] = v);
+      obj.openingBalance = Number(obj.openingBalance || 0);
+      await db.put("company", obj);
+      this.toast("Company info saved.");
+    });
+  },
+
+  async _renderProjectsTab(){
+    const projects = await db.all("projects");
+    document.getElementById("tab-content").innerHTML = `
+      <div class="page-header" style="margin-bottom:14px;">
+        <p style="color:var(--ink-3);">Manage your active and historical construction projects.</p>
+        <button class="btn btn-primary" onclick="app.editProject()">+ New Project</button>
+      </div>
+      <div class="table-wrap">
+        ${projects.length === 0 ? `
+          <div class="empty-state"><span class="emoji">🏢</span>
+            <h3>No projects yet</h3>
+            <p>Create your first project to start tracking inventory.</p>
+          </div>` : `
+          <table class="data-table">
+            <thead><tr><th>Name</th><th>Client</th><th>Start Date</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>${projects.map(p => `
+              <tr>
+                <td><strong>${p.name}</strong></td>
+                <td>${p.client||"—"}</td>
+                <td>${p.startDate||"—"}</td>
+                <td><span class="badge badge-${p.status==='Active'?'green':p.status==='Completed'?'blue':'gray'}">${p.status||"—"}</span></td>
+                <td class="actions">
+                  <button class="btn-icon" onclick="app.editProject(${p.id})">✏️</button>
+                  <button class="btn-icon danger" onclick="app.deleteProject(${p.id})">🗑️</button>
+                </td>
+              </tr>`).join("")}
+            </tbody>
+          </table>`}
+      </div>
+    `;
+  },
+
+  async editProject(id){
+    const p = id ? await db.get("projects", id) : { name:"", client:"", startDate:new Date().toISOString().slice(0,10), status:"Active", notes:"" };
+    this.openModal(id ? "Edit Project" : "New Project", `
+      <form id="project-form">
+        <div class="form-group"><label>Project Name *</label><input name="name" value="${p.name||''}" required></div>
+        <div class="form-row">
+          <div class="form-group"><label>Client</label><input name="client" value="${p.client||''}"></div>
+          <div class="form-group"><label>Start Date</label><input type="date" name="startDate" value="${p.startDate||''}"></div>
+        </div>
+        <div class="form-group"><label>Status</label>
+          <select name="status">
+            ${["Active","Planning","On Hold","Completed"].map(s => `<option ${p.status===s?'selected':''}>${s}</option>`).join("")}
+          </select>
+        </div>
+        <div class="form-group"><label>Notes</label><textarea name="notes">${p.notes||''}</textarea></div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="app.closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">${id?"Save Changes":"Create Project"}</button>
+        </div>
+      </form>
+    `);
+    document.getElementById("project-form").addEventListener("submit", async e => {
+      e.preventDefault();
+      const fd = new FormData(e.target); const obj = id ? { ...p } : {};
+      fd.forEach((v,k) => obj[k] = v);
+      if (id){ obj.id = id; await db.put("projects", obj); } else { await db.add("projects", obj); }
+      this.closeModal(); this.toast(id?"Project updated":"Project created"); this._renderProjectsTab();
+    });
+  },
+
+  async deleteProject(id){
+    this.confirm("Delete this project? Linked sites/locations stay but will lose their parent reference.", async () => {
+      await db.delete("projects", id);
+      this.toast("Project deleted", "warn");
+      this._renderProjectsTab();
+    });
+  },
+
+  /* =========================================================
+     SITES & LOCATIONS
+  ========================================================= */
+  async renderSites(){
+    const projects = await db.all("projects");
+    const sites = await db.all("sites");
+    const locations = await db.all("locations");
+
+    const projMap = Object.fromEntries(projects.map(p => [p.id, p]));
+
+    document.getElementById("main-content").innerHTML = `
+      <div class="page-header">
+        <p style="color:var(--ink-3);">Sites are physical storage locations on each project. Each site has racks/bins.</p>
+        <div class="page-actions">
+          <button class="btn btn-secondary" onclick="app.editLocation()">+ New Location</button>
+          <button class="btn btn-primary" onclick="app.editSite()">+ New Site</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:18px;">
+        <div class="card-title">📍 Sites (${sites.length})</div>
+        ${sites.length === 0 ? `<div style="color:var(--ink-3);font-size:13px;">No sites yet — add your first one above.</div>` :
+        `<table class="data-table">
+          <thead><tr><th>Code</th><th>Name</th><th>Project</th><th>Manager</th><th>Address</th><th>Actions</th></tr></thead>
+          <tbody>${sites.map(s => `
+            <tr>
+              <td><code>${s.code||"—"}</code></td>
+              <td><strong>${s.name}</strong></td>
+              <td>${projMap[s.projectId]?.name||"—"}</td>
+              <td>${s.manager||"—"}</td>
+              <td>${s.address||"—"}</td>
+              <td class="actions">
+                <button class="btn-icon" onclick="app.editSite(${s.id})">✏️</button>
+                <button class="btn-icon danger" onclick="app.deleteSite(${s.id})">🗑️</button>
+              </td>
+            </tr>`).join("")}
+          </tbody>
+        </table>`}
+      </div>
+
+      <div class="card">
+        <div class="card-title">🗄️ Locations / Racks (${locations.length})</div>
+        ${locations.length === 0 ? `<div style="color:var(--ink-3);font-size:13px;">No storage locations yet.</div>` :
+        `<table class="data-table">
+          <thead><tr><th>Code</th><th>Name</th><th>Site</th><th>Description</th><th>Actions</th></tr></thead>
+          <tbody>${locations.map(l => {
+            const s = sites.find(x => x.id === l.siteId);
+            return `
+            <tr>
+              <td><code>${l.code||"—"}</code></td>
+              <td><strong>${l.name}</strong></td>
+              <td>${s?.name||"—"}</td>
+              <td>${l.description||"—"}</td>
+              <td class="actions">
+                <button class="btn-icon" onclick="app.editLocation(${l.id})">✏️</button>
+                <button class="btn-icon danger" onclick="app.deleteLocation(${l.id})">🗑️</button>
+              </td>
+            </tr>`;
+          }).join("")}
+          </tbody>
+        </table>`}
+      </div>
+    `;
+  },
+
+  async editSite(id){
+    const projects = await db.all("projects");
+    if (projects.length === 0){
+      this.toast("Create a project first.", "warn");
+      return;
+    }
+    const s = id ? await db.get("sites", id) : { name:"", code:"", projectId: projects[0].id, manager:"", address:"" };
+    this.openModal(id ? "Edit Site" : "New Site", `
+      <form id="site-form">
+        <div class="form-row">
+          <div class="form-group"><label>Site Code</label><input name="code" value="${s.code||''}" placeholder="e.g. SITE-01"></div>
+          <div class="form-group"><label>Site Name *</label><input name="name" value="${s.name||''}" required></div>
+        </div>
+        <div class="form-group"><label>Project *</label>
+          <select name="projectId" required>
+            ${projects.map(p => `<option value="${p.id}" ${s.projectId===p.id?'selected':''}>${p.name}</option>`).join("")}
+          </select>
+        </div>
+        <div class="form-group"><label>Site Manager</label><input name="manager" value="${s.manager||''}"></div>
+        <div class="form-group"><label>Address</label><textarea name="address">${s.address||''}</textarea></div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="app.closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">${id?"Save Changes":"Create Site"}</button>
+        </div>
+      </form>
+    `);
+    document.getElementById("site-form").addEventListener("submit", async e => {
+      e.preventDefault();
+      const fd = new FormData(e.target); const obj = id ? { ...s } : {};
+      fd.forEach((v,k) => obj[k] = v);
+      obj.projectId = Number(obj.projectId);
+      if (id){ obj.id = id; await db.put("sites", obj); } else { await db.add("sites", obj); }
+      this.closeModal(); this.toast(id?"Site updated":"Site created"); this.renderSites();
+    });
+  },
+
+  async deleteSite(id){
+    this.confirm("Delete this site? Stock movements at this site will remain but reference a missing site.", async () => {
+      await db.delete("sites", id);
+      this.toast("Site deleted", "warn"); this.renderSites();
+    });
+  },
+
+  async editLocation(id){
+    const sites = await db.all("sites");
+    if (sites.length === 0){ this.toast("Create a site first.", "warn"); return; }
+    const l = id ? await db.get("locations", id) : { siteId: sites[0].id, code:"", name:"", description:"" };
+    this.openModal(id ? "Edit Location" : "New Location", `
+      <form id="location-form">
+        <div class="form-group"><label>Site *</label>
+          <select name="siteId" required>${sites.map(s => `<option value="${s.id}" ${l.siteId===s.id?'selected':''}>${s.name}</option>`).join("")}</select>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Code</label><input name="code" value="${l.code||''}" placeholder="e.g. A, B-1"></div>
+          <div class="form-group"><label>Name *</label><input name="name" value="${l.name||''}" required></div>
+        </div>
+        <div class="form-group"><label>Description</label><textarea name="description">${l.description||''}</textarea></div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="app.closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">${id?"Save Changes":"Create"}</button>
+        </div>
+      </form>
+    `);
+    document.getElementById("location-form").addEventListener("submit", async e => {
+      e.preventDefault();
+      const fd = new FormData(e.target); const obj = id ? { ...l } : {};
+      fd.forEach((v,k) => obj[k] = v);
+      obj.siteId = Number(obj.siteId);
+      if (id){ obj.id = id; await db.put("locations", obj); } else { await db.add("locations", obj); }
+      this.closeModal(); this.toast(id?"Location updated":"Location created"); this.renderSites();
+    });
+  },
+
+  async deleteLocation(id){
+    this.confirm("Delete this location?", async () => {
+      await db.delete("locations", id);
+      this.toast("Location deleted", "warn"); this.renderSites();
+    });
+  },
+
+  /* =========================================================
+     EQUIPMENT REGISTER
+  ========================================================= */
+  async renderEquipment(){
+    const equipment = await db.all("equipment");
+    const sites = await db.all("sites");
+
+    document.getElementById("main-content").innerHTML = `
+      <div class="page-header">
+        <p style="color:var(--ink-3);">Track heavy equipment, vehicles, and serial-numbered machinery.</p>
+        <button class="btn btn-primary" onclick="app.editEquipment()">+ New Equipment</button>
+      </div>
+      <div class="table-wrap">
+        ${equipment.length === 0 ? `
+          <div class="empty-state"><span class="emoji">⚙️</span>
+            <h3>No equipment registered</h3><p>Add your first machine, vehicle, or tool above.</p>
+          </div>` : `
+          <table class="data-table">
+            <thead><tr><th>Asset Tag</th><th>Name</th><th>Type</th><th>Site</th><th>Serial</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>${equipment.map(e => {
+              const s = sites.find(x => x.id === e.siteId);
+              return `<tr>
+                <td><code>${e.tag||"—"}</code></td>
+                <td><strong>${e.name}</strong></td>
+                <td>${e.type||"—"}</td>
+                <td>${s?.name||"—"}</td>
+                <td>${e.serial||"—"}</td>
+                <td><span class="badge badge-${e.status==='Operational'?'green':e.status==='Under Maintenance'?'amber':'red'}">${e.status||"—"}</span></td>
+                <td class="actions">
+                  <button class="btn-icon" onclick="app.editEquipment(${e.id})">✏️</button>
+                  <button class="btn-icon danger" onclick="app.deleteEquipment(${e.id})">🗑️</button>
+                </td>
+              </tr>`;
+            }).join("")}
+            </tbody>
+          </table>`}
+      </div>
+    `;
+  },
+
+  async editEquipment(id){
+    const sites = await db.all("sites");
+    const e = id ? await db.get("equipment", id) : { tag:"", name:"", type:"", siteId: sites[0]?.id || null, serial:"", status:"Operational", notes:"" };
+    this.openModal(id ? "Edit Equipment" : "New Equipment", `
+      <form id="eq-form">
+        <div class="form-row">
+          <div class="form-group"><label>Asset Tag</label><input name="tag" value="${e.tag||''}" placeholder="EQ-001"></div>
+          <div class="form-group"><label>Name *</label><input name="name" value="${e.name||''}" required></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Type</label>
+            <select name="type">
+              ${["Vehicle","Heavy Machine","Power Tool","Generator","Lifting Equipment","Other"].map(x => `<option ${e.type===x?'selected':''}>${x}</option>`).join("")}
+            </select>
+          </div>
+          <div class="form-group"><label>Site</label>
+            <select name="siteId">${sites.map(s => `<option value="${s.id}" ${e.siteId===s.id?'selected':''}>${s.name}</option>`).join("")}</select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Serial Number</label><input name="serial" value="${e.serial||''}"></div>
+          <div class="form-group"><label>Status</label>
+            <select name="status">
+              ${["Operational","Under Maintenance","Out of Service","Disposed"].map(x => `<option ${e.status===x?'selected':''}>${x}</option>`).join("")}
+            </select>
+          </div>
+        </div>
+        <div class="form-group"><label>Notes</label><textarea name="notes">${e.notes||''}</textarea></div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="app.closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">${id?"Save Changes":"Create"}</button>
+        </div>
+      </form>
+    `);
+    document.getElementById("eq-form").addEventListener("submit", async ev => {
+      ev.preventDefault();
+      const fd = new FormData(ev.target); const obj = id ? { ...e } : {};
+      fd.forEach((v,k) => obj[k] = v);
+      obj.siteId = obj.siteId ? Number(obj.siteId) : null;
+      if (id){ obj.id = id; await db.put("equipment", obj); } else { await db.add("equipment", obj); }
+      this.closeModal(); this.toast(id?"Equipment updated":"Equipment added"); this.renderEquipment();
+    });
+  },
+  async deleteEquipment(id){
+    this.confirm("Delete this equipment record?", async () => {
+      await db.delete("equipment", id);
+      this.toast("Equipment removed", "warn"); this.renderEquipment();
+    });
+  },
+
+  /* =========================================================
+     ITEM MASTER
+  ========================================================= */
+  async renderItems(){
+    const items = await db.all("items");
+    const movs = await db.all("stockMovements");
+    const stockMap = new Map();
+    movs.forEach(m => stockMap.set(m.itemId, (stockMap.get(m.itemId)||0) + (m.type==="IN"?m.qty:-m.qty)));
+
+    document.getElementById("main-content").innerHTML = `
+      <div class="page-header">
+        <p style="color:var(--ink-3);">All materials, consumables, and tracked tools live here. ${items.length} item${items.length!==1?'s':''}.</p>
+        <button class="btn btn-primary" onclick="app.editItem()">+ New Item</button>
+      </div>
+      <div class="table-wrap">
+        <div class="table-toolbar">
+          <input id="items-search" class="table-search" placeholder="Search by name, SKU, or category…">
+        </div>
+        ${items.length === 0 ? `
+          <div class="empty-state"><span class="emoji">🗂️</span>
+            <h3>No items yet</h3><p>Build your material catalog by adding items above.</p>
+          </div>` : `
+          <table class="data-table" id="items-table">
+            <thead><tr><th>SKU</th><th>Name</th><th>Category</th><th>Unit</th><th>Stock</th><th>Reorder</th><th>Cost</th><th>Actions</th></tr></thead>
+            <tbody>${items.map(it => {
+              const s = stockMap.get(it.id) || 0;
+              const low = s <= (it.reorderLevel || 0);
+              return `<tr data-search="${(it.sku+' '+it.name+' '+(it.category||'')).toLowerCase()}">
+                <td><code>${it.sku||"—"}</code></td>
+                <td><strong>${it.name}</strong></td>
+                <td>${it.category||"—"}</td>
+                <td>${it.unit||"—"}</td>
+                <td><strong style="color:${low?'var(--red)':'var(--ink)'};">${s}</strong></td>
+                <td>${it.reorderLevel||0}</td>
+                <td>${this.fmtMoney(it.costPrice||0)}</td>
+                <td class="actions">
+                  <button class="btn-icon" onclick="app.editItem(${it.id})">✏️</button>
+                  <button class="btn-icon danger" onclick="app.deleteItem(${it.id})">🗑️</button>
+                </td>
+              </tr>`;
+            }).join("")}
+            </tbody>
+          </table>`}
+      </div>
+    `;
+    const search = document.getElementById("items-search");
+    if (search){
+      search.addEventListener("input", () => {
+        const q = search.value.toLowerCase();
+        document.querySelectorAll("#items-table tbody tr").forEach(tr => {
+          tr.style.display = tr.dataset.search.includes(q) ? "" : "none";
+        });
+      });
+    }
+  },
+
+  async editItem(id){
+    const it = id ? await db.get("items", id) : { sku:"", name:"", category:"", unit:"pcs", reorderLevel:0, costPrice:0, supplier:"", notes:"" };
+    this.openModal(id ? "Edit Item" : "New Item", `
+      <form id="item-form">
+        <div class="form-row">
+          <div class="form-group"><label>SKU / Code</label><input name="sku" value="${it.sku||''}" placeholder="e.g. CEM-001"></div>
+          <div class="form-group"><label>Name *</label><input name="name" value="${it.name||''}" required></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Category</label>
+            <input name="category" list="categories" value="${it.category||''}" placeholder="e.g. Cement">
+            <datalist id="categories">
+              <option>Cement</option><option>Steel & Rebar</option><option>Aggregates</option>
+              <option>Bricks & Blocks</option><option>Lumber</option><option>Electrical</option>
+              <option>Plumbing</option><option>Tools</option><option>Safety</option><option>Consumables</option>
+            </datalist>
+          </div>
+          <div class="form-group"><label>Unit *</label>
+            <input name="unit" list="units" value="${it.unit||'pcs'}" required>
+            <datalist id="units"><option>pcs</option><option>bag</option><option>kg</option><option>ton</option><option>m</option><option>m²</option><option>m³</option><option>L</option><option>roll</option><option>box</option></datalist>
+          </div>
+        </div>
+        <div class="form-row-3">
+          <div class="form-group"><label>Reorder Level</label><input type="number" name="reorderLevel" min="0" step="1" value="${it.reorderLevel||0}"></div>
+          <div class="form-group"><label>Cost Price</label><input type="number" name="costPrice" min="0" step="0.01" value="${it.costPrice||0}"></div>
+          <div class="form-group"><label>Default Supplier</label><input name="supplier" value="${it.supplier||''}"></div>
+        </div>
+        <div class="form-group"><label>Notes</label><textarea name="notes">${it.notes||''}</textarea></div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="app.closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">${id?"Save Changes":"Create Item"}</button>
+        </div>
+      </form>
+    `, { wide: true });
+    document.getElementById("item-form").addEventListener("submit", async e => {
+      e.preventDefault();
+      const fd = new FormData(e.target); const obj = id ? { ...it } : {};
+      fd.forEach((v,k) => obj[k] = v);
+      obj.reorderLevel = Number(obj.reorderLevel||0);
+      obj.costPrice = Number(obj.costPrice||0);
+      if (id){ obj.id = id; await db.put("items", obj); } else { await db.add("items", obj); }
+      this.closeModal(); this.toast(id?"Item updated":"Item created"); this.renderItems();
+    });
+  },
+  async deleteItem(id){
+    this.confirm("Delete this item? Existing stock movements will remain but reference a missing item.", async () => {
+      await db.delete("items", id);
+      this.toast("Item deleted", "warn"); this.renderItems();
+    });
+  },
+
+  /* =========================================================
+     STOCK IN
+  ========================================================= */
+  async renderStockIn(){
+    const movs = (await db.all("stockMovements")).filter(m => m.type === "IN").sort((a,b)=>(b.date||0)-(a.date||0));
+    const items = await db.all("items");
+    const sites = await db.all("sites");
+    const itemMap = Object.fromEntries(items.map(i => [i.id, i]));
+    const siteMap = Object.fromEntries(sites.map(s => [s.id, s]));
+
+    document.getElementById("main-content").innerHTML = `
+      <div class="page-header">
+        <p style="color:var(--ink-3);">${movs.length} stock-in transaction${movs.length!==1?'s':''}. Each entry adds to current stock.</p>
+        <button class="btn btn-primary" onclick="app.editMovement('IN')">+ New Stock IN</button>
+      </div>
+      <div class="table-wrap">
+        ${movs.length === 0 ? `
+          <div class="empty-state"><span class="emoji">📥</span>
+            <h3>No stock-in entries yet</h3><p>Record received deliveries and goods above.</p>
+          </div>` : `
+          <table class="data-table">
+            <thead><tr><th>Date</th><th>Ref No.</th><th>Item</th><th>Qty</th><th>Site</th><th>Supplier</th><th>Actions</th></tr></thead>
+            <tbody>${movs.map(m => `
+              <tr>
+                <td>${this.fmtDate(m.date)}</td>
+                <td><code>${m.refNo||"—"}</code></td>
+                <td><strong>${itemMap[m.itemId]?.name||"—"}</strong></td>
+                <td>${m.qty} ${itemMap[m.itemId]?.unit||""}</td>
+                <td>${siteMap[m.siteId]?.name||"—"}</td>
+                <td>${m.supplier||"—"}</td>
+                <td class="actions">
+                  <button class="btn-icon" onclick="app.editMovement('IN',${m.id})">✏️</button>
+                  <button class="btn-icon danger" onclick="app.deleteMovement(${m.id},'IN')">🗑️</button>
+                </td>
+              </tr>`).join("")}
+            </tbody>
+          </table>`}
+      </div>
+    `;
+  },
+
+  /* =========================================================
+     STOCK OUT
+  ========================================================= */
+  async renderStockOut(){
+    const movs = (await db.all("stockMovements")).filter(m => m.type === "OUT").sort((a,b)=>(b.date||0)-(a.date||0));
+    const items = await db.all("items");
+    const sites = await db.all("sites");
+    const itemMap = Object.fromEntries(items.map(i => [i.id, i]));
+    const siteMap = Object.fromEntries(sites.map(s => [s.id, s]));
+
+    document.getElementById("main-content").innerHTML = `
+      <div class="page-header">
+        <p style="color:var(--ink-3);">${movs.length} stock-out transaction${movs.length!==1?'s':''}. Each entry deducts from stock.</p>
+        <button class="btn btn-primary" onclick="app.editMovement('OUT')">+ New Stock OUT</button>
+      </div>
+      <div class="table-wrap">
+        ${movs.length === 0 ? `
+          <div class="empty-state"><span class="emoji">📤</span>
+            <h3>No stock-out entries yet</h3><p>Record issued/consumed materials above.</p>
+          </div>` : `
+          <table class="data-table">
+            <thead><tr><th>Date</th><th>Ref No.</th><th>Item</th><th>Qty</th><th>Site</th><th>Issued To</th><th>Purpose</th><th>Actions</th></tr></thead>
+            <tbody>${movs.map(m => `
+              <tr>
+                <td>${this.fmtDate(m.date)}</td>
+                <td><code>${m.refNo||"—"}</code></td>
+                <td><strong>${itemMap[m.itemId]?.name||"—"}</strong></td>
+                <td>${m.qty} ${itemMap[m.itemId]?.unit||""}</td>
+                <td>${siteMap[m.siteId]?.name||"—"}</td>
+                <td>${m.issuedTo||"—"}</td>
+                <td>${m.purpose||"—"}</td>
+                <td class="actions">
+                  <button class="btn-icon" onclick="app.editMovement('OUT',${m.id})">✏️</button>
+                  <button class="btn-icon danger" onclick="app.deleteMovement(${m.id},'OUT')">🗑️</button>
+                </td>
+              </tr>`).join("")}
+            </tbody>
+          </table>`}
+      </div>
+    `;
+  },
+
+  async editMovement(type, id){
+    const items = await db.all("items");
+    const sites = await db.all("sites");
+    if (items.length === 0){ this.toast("Create an item first.","warn"); return; }
+    if (sites.length === 0){ this.toast("Create a site first.","warn"); return; }
+    const m = id ? await db.get("stockMovements", id) : {
+      type, itemId: items[0].id, siteId: sites[0].id,
+      qty: 1, date: Date.now(), refNo:"",
+      supplier:"", issuedTo:"", purpose:"", notes:""
+    };
+    const dateStr = m.date ? new Date(m.date).toISOString().slice(0,10) : new Date().toISOString().slice(0,10);
+
+    this.openModal(id ? `Edit Stock ${type}` : `New Stock ${type}`, `
+      <form id="mov-form">
+        <div class="form-row">
+          <div class="form-group"><label>Date *</label><input type="date" name="date" value="${dateStr}" required></div>
+          <div class="form-group"><label>Reference No.</label><input name="refNo" value="${m.refNo||''}" placeholder="DC/Invoice/MR No."></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Item *</label>
+            <select name="itemId" required>${items.map(i => `<option value="${i.id}" ${m.itemId===i.id?'selected':''}>${i.name} (${i.unit||'pcs'})</option>`).join("")}</select>
+          </div>
+          <div class="form-group"><label>Quantity *</label><input type="number" name="qty" min="0.01" step="0.01" value="${m.qty}" required></div>
+        </div>
+        <div class="form-group"><label>Site *</label>
+          <select name="siteId" required>${sites.map(s => `<option value="${s.id}" ${m.siteId===s.id?'selected':''}>${s.name}</option>`).join("")}</select>
+        </div>
+        ${type === "IN" ? `
+          <div class="form-group"><label>Supplier</label><input name="supplier" value="${m.supplier||''}"></div>
+        ` : `
+          <div class="form-row">
+            <div class="form-group"><label>Issued To</label><input name="issuedTo" value="${m.issuedTo||''}" placeholder="Person / team"></div>
+            <div class="form-group"><label>Purpose</label><input name="purpose" value="${m.purpose||''}" placeholder="e.g. Foundation work"></div>
+          </div>
+        `}
+        <div class="form-group"><label>Notes</label><textarea name="notes">${m.notes||''}</textarea></div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="app.closeModal()">Cancel</button>
+          <button type="submit" class="btn ${type==='IN'?'btn-success':'btn-primary'}">${id?"Save Changes":(type==='IN'?'Receive':'Issue')}</button>
+        </div>
+      </form>
+    `, { wide: true });
+    document.getElementById("mov-form").addEventListener("submit", async e => {
+      e.preventDefault();
+      const fd = new FormData(e.target); const obj = id ? { ...m } : { type };
+      fd.forEach((v,k) => obj[k] = v);
+      obj.itemId = Number(obj.itemId);
+      obj.siteId = Number(obj.siteId);
+      obj.qty = Number(obj.qty);
+      obj.date = new Date(obj.date).getTime();
+      if (type === "OUT"){
+        const currentStock = await this.stockOf(obj.itemId);
+        const original = id ? m.qty : 0;
+        const effective = currentStock + (id ? original : 0); // adding back the original on edit
+        if (obj.qty > effective){
+          if (!confirm(`Stock will go negative (available: ${effective}, issuing: ${obj.qty}). Proceed?`)) return;
+        }
+      }
+      if (id){ obj.id = id; await db.put("stockMovements", obj); } else { await db.add("stockMovements", obj); }
+      this.closeModal();
+      this.toast(`Stock ${type} ${id?"updated":"recorded"}`);
+      type === "IN" ? this.renderStockIn() : this.renderStockOut();
+    });
+  },
+
+  async deleteMovement(id, type){
+    this.confirm("Delete this movement? Stock balances will be recalculated.", async () => {
+      await db.delete("stockMovements", id);
+      this.toast("Movement deleted", "warn");
+      type === "IN" ? this.renderStockIn() : this.renderStockOut();
+    });
+  },
+
+  /* =========================================================
+     TOOL TRACKER
+  ========================================================= */
+  async renderToolTracker(){
+    const issues = (await db.all("toolIssues")).sort((a,b)=>(b.issueDate||0)-(a.issueDate||0));
+    const items = await db.all("items");
+    const itemMap = Object.fromEntries(items.map(i => [i.id, i]));
+
+    const issued = issues.filter(i => i.status === "ISSUED");
+    const returned = issues.filter(i => i.status === "RETURNED");
+
+    document.getElementById("main-content").innerHTML = `
+      <div class="page-header">
+        <p style="color:var(--ink-3);">Track tools and equipment issued to workers. ${issued.length} currently out.</p>
+        <button class="btn btn-primary" onclick="app.editToolIssue()">+ Issue Tool</button>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card stat-red">
+          <div class="stat-icon">🔨</div>
+          <div class="stat-label">Currently Out</div>
+          <div class="stat-value">${issued.length}</div>
+        </div>
+        <div class="stat-card stat-green">
+          <div class="stat-icon">✅</div>
+          <div class="stat-label">Returned</div>
+          <div class="stat-value">${returned.length}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📋</div>
+          <div class="stat-label">Total Records</div>
+          <div class="stat-value">${issues.length}</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🔨 All Tool Issues</div>
+        ${issues.length === 0 ? `<div style="color:var(--ink-3);font-size:13px;">No tool issues recorded yet.</div>` : `
+        <table class="data-table">
+          <thead><tr><th>Issue Date</th><th>Tool</th><th>Qty</th><th>Issued To</th><th>Expected Return</th><th>Return Date</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody>${issues.map(t => `
+            <tr>
+              <td>${this.fmtDate(t.issueDate)}</td>
+              <td><strong>${itemMap[t.itemId]?.name||"—"}</strong></td>
+              <td>${t.qty}</td>
+              <td>${t.issuedTo||"—"}</td>
+              <td>${t.expectedReturn||"—"}</td>
+              <td>${t.returnDate?this.fmtDate(t.returnDate):"—"}</td>
+              <td><span class="badge badge-${t.status==='ISSUED'?'amber':'green'}">${t.status}</span></td>
+              <td class="actions">
+                ${t.status === "ISSUED" ? `<button class="btn btn-sm btn-success" onclick="app.returnTool(${t.id})">Return</button>` : ""}
+                <button class="btn-icon danger" onclick="app.deleteToolIssue(${t.id})">🗑️</button>
+              </td>
+            </tr>`).join("")}
+          </tbody>
+        </table>`}
+      </div>
+    `;
+  },
+
+  async editToolIssue(){
+    const items = await db.all("items");
+    const tools = items.filter(i => (i.category||"").toLowerCase().includes("tool"));
+    const list = tools.length > 0 ? tools : items;
+    if (list.length === 0){ this.toast("Add at least one item to the master first.","warn"); return; }
+    const today = new Date().toISOString().slice(0,10);
+
+    this.openModal("Issue Tool", `
+      <form id="tool-form">
+        <div class="form-row">
+          <div class="form-group"><label>Tool / Item *</label>
+            <select name="itemId" required>${list.map(i => `<option value="${i.id}">${i.name}</option>`).join("")}</select>
+          </div>
+          <div class="form-group"><label>Quantity *</label><input type="number" name="qty" min="1" value="1" required></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Issue Date *</label><input type="date" name="issueDate" value="${today}" required></div>
+          <div class="form-group"><label>Expected Return</label><input type="date" name="expectedReturn"></div>
+        </div>
+        <div class="form-group"><label>Issued To *</label><input name="issuedTo" required placeholder="Worker name / ID"></div>
+        <div class="form-group"><label>Notes</label><textarea name="notes"></textarea></div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="app.closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Issue Tool</button>
+        </div>
+      </form>
+    `);
+    document.getElementById("tool-form").addEventListener("submit", async e => {
+      e.preventDefault();
+      const fd = new FormData(e.target); const obj = { status: "ISSUED" };
+      fd.forEach((v,k) => obj[k] = v);
+      obj.itemId = Number(obj.itemId);
+      obj.qty = Number(obj.qty);
+      obj.issueDate = new Date(obj.issueDate).getTime();
+      await db.add("toolIssues", obj);
+      this.closeModal(); this.toast("Tool issued"); this.renderToolTracker();
+    });
+  },
+
+  async returnTool(id){
+    const t = await db.get("toolIssues", id);
+    t.status = "RETURNED";
+    t.returnDate = Date.now();
+    await db.put("toolIssues", t);
+    this.toast("Tool returned");
+    this.renderToolTracker();
+  },
+
+  async deleteToolIssue(id){
+    this.confirm("Delete this tool record?", async () => {
+      await db.delete("toolIssues", id);
+      this.toast("Record deleted","warn"); this.renderToolTracker();
+    });
+  },
+
+  /* =========================================================
+     PO GENERATOR
+  ========================================================= */
+  async renderPOGenerator(){
+    const items = await db.all("items");
+    const movs = await db.all("stockMovements");
+    const stockMap = new Map();
+    movs.forEach(m => stockMap.set(m.itemId, (stockMap.get(m.itemId)||0) + (m.type==="IN"?m.qty:-m.qty)));
+
+    const low = items.map(it => {
+      const stock = stockMap.get(it.id) || 0;
+      const deficit = (it.reorderLevel || 0) - stock;
+      return { it, stock, deficit };
+    }).filter(x => x.deficit > 0).sort((a,b) => b.deficit - a.deficit);
+
+    // group by supplier
+    const grouped = {};
+    low.forEach(({it, stock, deficit}) => {
+      const sup = it.supplier || "Unassigned";
+      if (!grouped[sup]) grouped[sup] = [];
+      grouped[sup].push({ it, stock, deficit });
+    });
+
+    document.getElementById("main-content").innerHTML = `
+      <div class="page-header">
+        <div>
+          <h2>Auto-generate POs from low stock</h2>
+          <p style="color:var(--ink-3);">Items below their reorder level, grouped by default supplier.</p>
+        </div>
+        ${low.length>0 ? `<button class="btn btn-primary" onclick="app.generateAllPOs()">⚡ Generate All POs</button>` : ""}
+      </div>
+
+      ${low.length === 0 ? `
+        <div class="card">
+          <div class="empty-state"><span class="emoji">✅</span>
+            <h3>Everything in stock</h3><p>No items are below their reorder levels right now.</p>
+          </div>
+        </div>` : Object.entries(grouped).map(([supplier, rows]) => `
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-title">
+            🏭 ${supplier}
+            <span style="margin-left:auto;font-size:12px;color:var(--ink-3);font-weight:400;">${rows.length} item${rows.length>1?'s':''}</span>
+          </div>
+          <table class="data-table">
+            <thead><tr><th>Item</th><th>Current Stock</th><th>Reorder Level</th><th>Suggested Qty</th><th>Cost</th><th>Subtotal</th></tr></thead>
+            <tbody>${rows.map(({it,stock,deficit}) => `
+              <tr>
+                <td><strong>${it.name}</strong> <span class="row-tag">${it.sku||""}</span></td>
+                <td style="color:${stock<=0?'var(--red)':'var(--amber-2)'};">${stock} ${it.unit||""}</td>
+                <td>${it.reorderLevel||0}</td>
+                <td><strong>${deficit}</strong> ${it.unit||""}</td>
+                <td>${this.fmtMoney(it.costPrice||0)}</td>
+                <td><strong>${this.fmtMoney((it.costPrice||0) * deficit)}</strong></td>
+              </tr>`).join("")}
+            </tbody>
+          </table>
+          <div style="margin-top:14px;text-align:right;">
+            <button class="btn btn-success po-gen-btn" data-supplier-idx="${Object.keys(grouped).indexOf(supplier)}">
+              📋 Create PO for ${supplier}
+            </button>
+          </div>
+        </div>
+      `).join("")}
+    `;
+    // attach handlers using a stashed lookup so supplier names with quotes are safe
+    this._poGenGroups = grouped;
+    document.querySelectorAll(".po-gen-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const supplier = Object.keys(this._poGenGroups)[Number(btn.dataset.supplierIdx)];
+        const rows = this._poGenGroups[supplier];
+        const lines = rows.map(r => ({ itemId: r.it.id, qty: r.deficit, rate: r.it.costPrice || 0, name: r.it.name }));
+        this.createPOForSupplier(supplier, lines);
+      });
+    });
+  },
+
+  async createPOForSupplier(supplier, lines){
+    const company = await db.get("company", 1);
+    const total = lines.reduce((acc, l) => acc + l.qty * l.rate, 0);
+    const all = await db.all("purchaseOrders");
+    const poNo = `PO-${String(all.length + 1).padStart(4,"0")}`;
+    await db.add("purchaseOrders", {
+      poNo, supplier, date: Date.now(),
+      items: lines.map(l => ({ itemId: l.itemId, name: l.name, qty: l.qty, rate: l.rate, total: l.qty * l.rate })),
+      total, status: "DRAFT", notes: "Auto-generated from low stock"
+    });
+    this.toast(`PO ${poNo} created for ${supplier}`);
+    this.renderPOGenerator();
+  },
+
+  async generateAllPOs(){
+    const items = await db.all("items");
+    const movs = await db.all("stockMovements");
+    const stockMap = new Map();
+    movs.forEach(m => stockMap.set(m.itemId, (stockMap.get(m.itemId)||0) + (m.type==="IN"?m.qty:-m.qty)));
+
+    const grouped = {};
+    items.forEach(it => {
+      const stock = stockMap.get(it.id) || 0;
+      const deficit = (it.reorderLevel || 0) - stock;
+      if (deficit > 0){
+        const sup = it.supplier || "Unassigned";
+        if (!grouped[sup]) grouped[sup] = [];
+        grouped[sup].push({ itemId: it.id, name: it.name, qty: deficit, rate: it.costPrice||0 });
+      }
+    });
+
+    let count = 0;
+    const all = await db.all("purchaseOrders");
+    for (const [supplier, lines] of Object.entries(grouped)){
+      count++;
+      const poNo = `PO-${String(all.length + count).padStart(4,"0")}`;
+      const total = lines.reduce((acc,l) => acc + l.qty * l.rate, 0);
+      await db.add("purchaseOrders", {
+        poNo, supplier, date: Date.now(),
+        items: lines.map(l => ({ ...l, total: l.qty * l.rate })),
+        total, status: "DRAFT", notes: "Auto-generated from low stock"
+      });
+    }
+    this.toast(`${count} PO${count!==1?'s':''} created`);
+    this.go("purchase-orders");
+  },
+
+  /* =========================================================
+     PURCHASE ORDERS
+  ========================================================= */
+  async renderPurchaseOrders(){
+    const pos = (await db.all("purchaseOrders")).sort((a,b)=>(b.date||0)-(a.date||0));
+    const company = await db.get("company", 1);
+    const cur = company?.currency || "USD";
+
+    document.getElementById("main-content").innerHTML = `
+      <div class="page-header">
+        <p style="color:var(--ink-3);">${pos.length} purchase order${pos.length!==1?'s':''} on record.</p>
+        <button class="btn btn-primary" onclick="app.editPO()">+ New PO</button>
+      </div>
+      <div class="table-wrap">
+        ${pos.length === 0 ? `
+          <div class="empty-state"><span class="emoji">📋</span>
+            <h3>No purchase orders</h3><p>Create one manually or use the PO Generator.</p>
+          </div>` : `
+          <table class="data-table">
+            <thead><tr><th>PO No.</th><th>Date</th><th>Supplier</th><th>Items</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>${pos.map(p => `
+              <tr>
+                <td><strong>${p.poNo}</strong></td>
+                <td>${this.fmtDate(p.date)}</td>
+                <td>${p.supplier||"—"}</td>
+                <td>${(p.items||[]).length} line${(p.items||[]).length!==1?'s':''}</td>
+                <td><strong>${this.fmtMoney(p.total||0, cur)}</strong></td>
+                <td><span class="badge badge-${p.status==='DRAFT'?'amber':p.status==='SENT'?'blue':p.status==='RECEIVED'?'green':'red'}">${p.status}</span></td>
+                <td class="actions">
+                  <button class="btn-icon" onclick="app.viewPO(${p.id})" title="View">👁️</button>
+                  <button class="btn-icon" onclick="app.editPO(${p.id})" title="Edit">✏️</button>
+                  ${p.status==='SENT'?`<button class="btn-icon" onclick="app.receivePO(${p.id})" title="Mark received">📥</button>`:""}
+                  <button class="btn-icon danger" onclick="app.deletePO(${p.id})">🗑️</button>
+                </td>
+              </tr>`).join("")}
+            </tbody>
+          </table>`}
+      </div>
+    `;
+  },
+
+  async viewPO(id){
+    const p = await db.get("purchaseOrders", id);
+    const company = await db.get("company", 1);
+    const cur = company?.currency || "USD";
+    this.openModal(`Purchase Order — ${p.poNo}`, `
+      <div style="display:flex;justify-content:space-between;margin-bottom:14px;">
+        <div>
+          <div style="font-weight:600;font-size:15px;">${company?.name||""}</div>
+          <div style="font-size:12px;color:var(--ink-3);">${company?.address||""}</div>
+        </div>
+        <div style="text-align:right;">
+          <div><strong>Date:</strong> ${this.fmtDate(p.date)}</div>
+          <div><strong>Status:</strong> <span class="badge badge-${p.status==='DRAFT'?'amber':p.status==='SENT'?'blue':p.status==='RECEIVED'?'green':'red'}">${p.status}</span></div>
+        </div>
+      </div>
+      <div style="background:var(--bg-elev);padding:12px;border-radius:6px;margin-bottom:14px;">
+        <div style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.5px;">Supplier</div>
+        <div style="font-weight:600;font-size:15px;">${p.supplier||"—"}</div>
+      </div>
+      <table class="data-table">
+        <thead><tr><th>#</th><th>Item</th><th>Qty</th><th>Rate</th><th>Total</th></tr></thead>
+        <tbody>${(p.items||[]).map((l,i) => `
+          <tr>
+            <td>${i+1}</td>
+            <td>${l.name}</td>
+            <td>${l.qty}</td>
+            <td>${this.fmtMoney(l.rate, cur)}</td>
+            <td><strong>${this.fmtMoney(l.total, cur)}</strong></td>
+          </tr>`).join("")}
+          <tr style="background:var(--bg-elev);"><td colspan="4" style="text-align:right;font-weight:600;">Grand Total</td><td><strong style="font-size:15px;">${this.fmtMoney(p.total, cur)}</strong></td></tr>
+        </tbody>
+      </table>
+      ${p.notes?`<div style="margin-top:12px;font-size:13px;"><strong>Notes:</strong> ${p.notes}</div>`:""}
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="window.print()">🖨️ Print</button>
+        ${p.status==='DRAFT'?`<button class="btn btn-primary" onclick="app.sendPO(${p.id})">📤 Mark as Sent</button>`:""}
+        ${p.status==='SENT'?`<button class="btn btn-success" onclick="app.receivePO(${p.id})">📥 Mark as Received</button>`:""}
+        <button class="btn btn-secondary" onclick="app.closeModal()">Close</button>
+      </div>
+    `, { wide: true });
+  },
+
+  async sendPO(id){
+    const p = await db.get("purchaseOrders", id);
+    p.status = "SENT";
+    await db.put("purchaseOrders", p);
+    this.closeModal(); this.toast("PO marked as sent"); this.renderPurchaseOrders();
+  },
+
+  async receivePO(id){
+    const p = await db.get("purchaseOrders", id);
+    const sites = await db.all("sites");
+    if (sites.length === 0){ this.toast("No site available to receive into.","error"); return; }
+    this.confirm(`This will create Stock IN entries for ${p.items.length} item line(s) at ${sites[0].name}. Continue?`, async () => {
+      for (const line of (p.items || [])){
+        await db.add("stockMovements", {
+          type: "IN",
+          itemId: line.itemId,
+          siteId: sites[0].id,
+          qty: line.qty,
+          date: Date.now(),
+          refNo: p.poNo,
+          supplier: p.supplier,
+          notes: `Auto-received from PO ${p.poNo}`,
+          poId: p.id
+        });
+      }
+      p.status = "RECEIVED";
+      await db.put("purchaseOrders", p);
+      this.toast(`PO received — ${p.items.length} stock-in entries created`);
+      this.closeModal();
+      this.renderPurchaseOrders();
+    });
+  },
+
+  async editPO(id){
+    const p = id ? await db.get("purchaseOrders", id) : {
+      poNo: "", supplier: "", date: Date.now(),
+      items: [], total: 0, status: "DRAFT", notes: ""
+    };
+    if (!id){
+      const all = await db.all("purchaseOrders");
+      p.poNo = `PO-${String(all.length + 1).padStart(4, "0")}`;
+    }
+    const items = await db.all("items");
+    const dateStr = new Date(p.date).toISOString().slice(0,10);
+
+    const renderLines = (lines) => lines.map((l,i) => `
+      <div class="form-row-3" style="align-items:end;margin-bottom:8px;">
+        <div class="form-group" style="margin:0;"><label>${i===0?'Item':''}</label>
+          <select class="po-item" data-idx="${i}">${items.map(it => `<option value="${it.id}" ${l.itemId===it.id?'selected':''}>${it.name}</option>`).join("")}</select>
+        </div>
+        <div class="form-group" style="margin:0;"><label>${i===0?'Qty':''}</label><input type="number" class="po-qty" data-idx="${i}" min="0" step="0.01" value="${l.qty}"></div>
+        <div class="form-group" style="margin:0;display:flex;gap:6px;align-items:end;">
+          <input type="number" class="po-rate" data-idx="${i}" min="0" step="0.01" value="${l.rate}" placeholder="Rate" style="flex:1;">
+          <button type="button" class="btn-icon danger" onclick="app._poRemoveLine(${i})">✕</button>
+        </div>
+      </div>
+    `).join("");
+
+    this.openModal(id ? `Edit ${p.poNo}` : "New Purchase Order", `
+      <form id="po-form">
+        <div class="form-row">
+          <div class="form-group"><label>PO Number *</label><input name="poNo" value="${p.poNo}" required></div>
+          <div class="form-group"><label>Date *</label><input type="date" name="date" value="${dateStr}" required></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Supplier *</label><input name="supplier" value="${p.supplier||''}" required></div>
+          <div class="form-group"><label>Status</label>
+            <select name="status">${["DRAFT","SENT","RECEIVED","CANCELLED"].map(s => `<option ${p.status===s?'selected':''}>${s}</option>`).join("")}</select>
+          </div>
+        </div>
+        <div style="margin-top:8px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <label style="font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.5px;">Line Items</label>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="app._poAddLine()">+ Add Line</button>
+          </div>
+          <div id="po-lines">${renderLines(p.items || [])}</div>
+          <div id="po-total" style="text-align:right;font-weight:600;margin-top:10px;font-size:15px;">Total: ${this.fmtMoney(p.total||0)}</div>
+        </div>
+        <div class="form-group" style="margin-top:14px;"><label>Notes</label><textarea name="notes">${p.notes||''}</textarea></div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="app.closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">${id?"Save Changes":"Create PO"}</button>
+        </div>
+      </form>
+    `, { wide: true });
+
+    this._poLines = p.items ? [...p.items] : [];
+    if (this._poLines.length === 0) this._poAddLine();
+    this._poItemsCache = items;
+    this._poRefreshTotal();
+
+    document.getElementById("po-form").addEventListener("submit", async e => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const lines = this._poCollectLines();
+      const total = lines.reduce((a,l) => a + l.total, 0);
+      const obj = id ? { ...p } : {};
+      fd.forEach((v,k) => obj[k] = v);
+      obj.date = new Date(obj.date).getTime();
+      obj.items = lines;
+      obj.total = total;
+      if (id){ obj.id = id; await db.put("purchaseOrders", obj); } else { await db.add("purchaseOrders", obj); }
+      this.closeModal(); this.toast(id?"PO updated":"PO created"); this.renderPurchaseOrders();
+    });
+
+    // dynamic listeners
+    document.getElementById("po-lines").addEventListener("input", () => this._poRefreshTotal());
+    document.getElementById("po-lines").addEventListener("change", () => this._poRefreshTotal());
+  },
+
+  _poCollectLines(){
+    const lines = [];
+    const itemMap = Object.fromEntries(this._poItemsCache.map(i => [i.id, i]));
+    document.querySelectorAll(".po-item").forEach((sel, idx) => {
+      const itemId = Number(sel.value);
+      const qty = Number(document.querySelector(`.po-qty[data-idx="${idx}"]`).value || 0);
+      const rate = Number(document.querySelector(`.po-rate[data-idx="${idx}"]`).value || 0);
+      if (qty > 0){
+        lines.push({ itemId, name: itemMap[itemId]?.name || "—", qty, rate, total: qty * rate });
+      }
+    });
+    return lines;
+  },
+  _poRefreshTotal(){
+    const lines = this._poCollectLines();
+    const total = lines.reduce((a,l) => a + l.total, 0);
+    document.getElementById("po-total").textContent = "Total: " + this.fmtMoney(total);
+  },
+  _poAddLine(){
+    this._poLines = this._poCollectLines();
+    this._poLines.push({ itemId: this._poItemsCache[0]?.id || 0, qty: 1, rate: 0, total: 0, name: this._poItemsCache[0]?.name || "" });
+    this._poRenderLines();
+  },
+  _poRemoveLine(i){
+    this._poLines = this._poCollectLines();
+    this._poLines.splice(i, 1);
+    this._poRenderLines();
+  },
+  _poRenderLines(){
+    const items = this._poItemsCache;
+    const html = this._poLines.map((l,i) => `
+      <div class="form-row-3" style="align-items:end;margin-bottom:8px;">
+        <div class="form-group" style="margin:0;"><label>${i===0?'Item':''}</label>
+          <select class="po-item" data-idx="${i}">${items.map(it => `<option value="${it.id}" ${l.itemId===it.id?'selected':''}>${it.name}</option>`).join("")}</select>
+        </div>
+        <div class="form-group" style="margin:0;"><label>${i===0?'Qty':''}</label><input type="number" class="po-qty" data-idx="${i}" min="0" step="0.01" value="${l.qty}"></div>
+        <div class="form-group" style="margin:0;display:flex;gap:6px;align-items:end;">
+          <input type="number" class="po-rate" data-idx="${i}" min="0" step="0.01" value="${l.rate}" placeholder="Rate" style="flex:1;">
+          <button type="button" class="btn-icon danger" onclick="app._poRemoveLine(${i})">✕</button>
+        </div>
+      </div>`).join("");
+    document.getElementById("po-lines").innerHTML = html;
+    this._poRefreshTotal();
+  },
+
+  async deletePO(id){
+    this.confirm("Delete this PO?", async () => {
+      await db.delete("purchaseOrders", id);
+      this.toast("PO deleted","warn"); this.renderPurchaseOrders();
+    });
+  },
+
+  /* =========================================================
+     REPORTS
+  ========================================================= */
+  async renderReports(){
+    const [items, movs, pos, tools, sites, company] = await Promise.all([
+      db.all("items"), db.all("stockMovements"),
+      db.all("purchaseOrders"), db.all("toolIssues"),
+      db.all("sites"), db.get("company", 1)
+    ]);
+    const cur = company?.currency || "USD";
+    const stockMap = new Map();
+    movs.forEach(m => stockMap.set(m.itemId, (stockMap.get(m.itemId)||0) + (m.type==="IN"?m.qty:-m.qty)));
+
+    // current stock report
+    const stockRows = items.map(it => {
+      const s = stockMap.get(it.id) || 0;
+      return { it, stock: s, value: s * (it.costPrice || 0) };
+    });
+    const totalValue = stockRows.reduce((a,r) => a + r.value, 0);
+    const lowStock = stockRows.filter(r => r.stock <= (r.it.reorderLevel || 0));
+    const negativeStock = stockRows.filter(r => r.stock < 0);
+
+    document.getElementById("main-content").innerHTML = `
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="stock">Stock Levels</button>
+        <button class="tab-btn" data-tab="low">Low Stock</button>
+        <button class="tab-btn" data-tab="movements">Movements</button>
+        <button class="tab-btn" data-tab="tools-out">Tools Out</button>
+        <button class="tab-btn" data-tab="po-summary">PO Summary</button>
+      </div>
+      <div id="report-content"></div>
+    `;
+
+    const renderStock = () => {
+      document.getElementById("report-content").innerHTML = `
+        <div class="page-header">
+          <div><h2>Current Stock Levels</h2><p>${items.length} items · Total value <strong>${this.fmtMoney(totalValue, cur)}</strong></p></div>
+          <div class="page-actions">
+            <button class="btn btn-secondary" onclick="app.exportCSV('stock')">⬇ Export CSV</button>
+            <button class="btn btn-secondary" onclick="window.print()">🖨️ Print</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>SKU</th><th>Name</th><th>Category</th><th>Unit</th><th>Stock</th><th>Reorder</th><th>Cost</th><th>Value</th></tr></thead>
+            <tbody>${stockRows.map(({it,stock,value}) => {
+              const low = stock <= (it.reorderLevel||0);
+              return `<tr>
+                <td><code>${it.sku||"—"}</code></td>
+                <td>${it.name}</td>
+                <td>${it.category||"—"}</td>
+                <td>${it.unit||"—"}</td>
+                <td><strong style="color:${stock<0?'var(--red)':low?'var(--amber-2)':'var(--ink)'};">${stock}</strong></td>
+                <td>${it.reorderLevel||0}</td>
+                <td>${this.fmtMoney(it.costPrice||0, cur)}</td>
+                <td><strong>${this.fmtMoney(value, cur)}</strong></td>
+              </tr>`;
+            }).join("")}
+            <tr style="background:var(--bg-elev);"><td colspan="7" style="text-align:right;font-weight:600;">Grand Total</td><td><strong style="font-size:15px;">${this.fmtMoney(totalValue, cur)}</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+      `;
+    };
+
+    const renderLow = () => {
+      document.getElementById("report-content").innerHTML = `
+        <div class="page-header">
+          <div><h2>Low Stock Report</h2><p>${lowStock.length} items at or below reorder level · ${negativeStock.length} negative</p></div>
+          <button class="btn btn-secondary" onclick="app.exportCSV('low')">⬇ Export CSV</button>
+        </div>
+        <div class="table-wrap">
+          ${lowStock.length === 0 ? `<div class="empty-state"><span class="emoji">✅</span><h3>All items in stock</h3></div>` : `
+          <table class="data-table">
+            <thead><tr><th>Item</th><th>Stock</th><th>Reorder</th><th>Suggested PO Qty</th><th>Supplier</th></tr></thead>
+            <tbody>${lowStock.map(({it,stock}) => `
+              <tr>
+                <td><strong>${it.name}</strong> <span class="row-tag">${it.sku||""}</span></td>
+                <td style="color:${stock<0?'var(--red)':'var(--amber-2)'};"><strong>${stock}</strong> ${it.unit||""}</td>
+                <td>${it.reorderLevel||0}</td>
+                <td><strong>${Math.max(0, (it.reorderLevel||0) - stock)}</strong></td>
+                <td>${it.supplier||"—"}</td>
+              </tr>`).join("")}
+            </tbody>
+          </table>`}
+        </div>
+      `;
+    };
+
+    const renderMovements = () => {
+      const itemMap = Object.fromEntries(items.map(i => [i.id, i]));
+      const siteMap = Object.fromEntries(sites.map(s => [s.id, s]));
+      const sorted = [...movs].sort((a,b) => (b.date||0)-(a.date||0));
+      document.getElementById("report-content").innerHTML = `
+        <div class="page-header">
+          <div><h2>All Movements</h2><p>${movs.length} total transactions</p></div>
+          <button class="btn btn-secondary" onclick="app.exportCSV('movements')">⬇ Export CSV</button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Date</th><th>Type</th><th>Item</th><th>Qty</th><th>Site</th><th>Ref</th><th>Party</th></tr></thead>
+            <tbody>${sorted.map(m => `
+              <tr>
+                <td>${this.fmtDate(m.date)}</td>
+                <td><span class="badge badge-${m.type==='IN'?'green':'red'}">${m.type}</span></td>
+                <td>${itemMap[m.itemId]?.name||"—"}</td>
+                <td>${m.qty} ${itemMap[m.itemId]?.unit||""}</td>
+                <td>${siteMap[m.siteId]?.name||"—"}</td>
+                <td><code>${m.refNo||"—"}</code></td>
+                <td>${m.supplier || m.issuedTo || "—"}</td>
+              </tr>`).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
+    };
+
+    const renderToolsOut = () => {
+      const itemMap = Object.fromEntries(items.map(i => [i.id, i]));
+      const outNow = tools.filter(t => t.status === "ISSUED");
+      document.getElementById("report-content").innerHTML = `
+        <div class="page-header"><div><h2>Tools Currently Out</h2><p>${outNow.length} unreturned items</p></div></div>
+        <div class="table-wrap">
+          ${outNow.length === 0 ? `<div class="empty-state"><span class="emoji">✅</span><h3>All tools returned</h3></div>` : `
+          <table class="data-table">
+            <thead><tr><th>Tool</th><th>Qty</th><th>Issued To</th><th>Issue Date</th><th>Expected Return</th><th>Overdue?</th></tr></thead>
+            <tbody>${outNow.map(t => {
+              const today = new Date(); today.setHours(0,0,0,0);
+              const exp = t.expectedReturn ? new Date(t.expectedReturn) : null;
+              const overdue = exp && exp < today;
+              return `<tr>
+                <td><strong>${itemMap[t.itemId]?.name||"—"}</strong></td>
+                <td>${t.qty}</td>
+                <td>${t.issuedTo||"—"}</td>
+                <td>${this.fmtDate(t.issueDate)}</td>
+                <td>${t.expectedReturn||"—"}</td>
+                <td>${overdue?'<span class="badge badge-red">OVERDUE</span>':'<span class="badge badge-gray">OK</span>'}</td>
+              </tr>`;
+            }).join("")}
+            </tbody>
+          </table>`}
+        </div>
+      `;
+    };
+
+    const renderPOSummary = () => {
+      const byStatus = pos.reduce((acc, p) => {
+        acc[p.status] = (acc[p.status]||0) + 1;
+        return acc;
+      }, {});
+      const totalSpend = pos.filter(p => p.status === "RECEIVED").reduce((a,p) => a + (p.total||0), 0);
+      const pending = pos.filter(p => p.status === "DRAFT" || p.status === "SENT").reduce((a,p) => a + (p.total||0), 0);
+
+      document.getElementById("report-content").innerHTML = `
+        <div class="page-header"><div><h2>Purchase Order Summary</h2><p>${pos.length} total POs</p></div></div>
+        <div class="stats-grid">
+          <div class="stat-card stat-blue"><div class="stat-label">Total POs</div><div class="stat-value">${pos.length}</div></div>
+          <div class="stat-card stat-green"><div class="stat-label">Received Value</div><div class="stat-value">${this.fmtMoney(totalSpend, cur)}</div></div>
+          <div class="stat-card stat-purple"><div class="stat-label">Pending Value</div><div class="stat-value">${this.fmtMoney(pending, cur)}</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">📊 By Status</div>
+          <div class="kpi-list">
+            ${["DRAFT","SENT","RECEIVED","CANCELLED"].map(s => `<div class="kpi-row"><span class="lbl">${s}</span><span class="val">${byStatus[s]||0}</span></div>`).join("")}
+          </div>
+        </div>
+      `;
+    };
+
+    const tabRenderers = {
+      stock: renderStock, low: renderLow,
+      movements: renderMovements, "tools-out": renderToolsOut,
+      "po-summary": renderPOSummary
+    };
+    document.querySelectorAll(".tab-btn").forEach(b => b.addEventListener("click", () => {
+      document.querySelectorAll(".tab-btn").forEach(x => x.classList.toggle("active", x === b));
+      tabRenderers[b.dataset.tab]();
+    }));
+    renderStock();
+  },
+
+  async exportCSV(kind){
+    const items = await db.all("items");
+    const movs = await db.all("stockMovements");
+    const sites = await db.all("sites");
+    const stockMap = new Map();
+    movs.forEach(m => stockMap.set(m.itemId, (stockMap.get(m.itemId)||0) + (m.type==="IN"?m.qty:-m.qty)));
+
+    let csv = "";
+    if (kind === "stock"){
+      csv = "SKU,Name,Category,Unit,Stock,Reorder Level,Cost Price,Value\n";
+      items.forEach(it => {
+        const s = stockMap.get(it.id) || 0;
+        csv += `"${it.sku||""}","${it.name}","${it.category||""}","${it.unit||""}",${s},${it.reorderLevel||0},${it.costPrice||0},${(s*(it.costPrice||0)).toFixed(2)}\n`;
+      });
+    } else if (kind === "low"){
+      csv = "SKU,Name,Stock,Reorder Level,Suggested Qty,Supplier\n";
+      items.forEach(it => {
+        const s = stockMap.get(it.id) || 0;
+        if (s <= (it.reorderLevel || 0)){
+          csv += `"${it.sku||""}","${it.name}",${s},${it.reorderLevel||0},${Math.max(0,(it.reorderLevel||0)-s)},"${it.supplier||""}"\n`;
+        }
+      });
+    } else if (kind === "movements"){
+      const itemMap = Object.fromEntries(items.map(i => [i.id, i]));
+      const siteMap = Object.fromEntries(sites.map(s => [s.id, s]));
+      csv = "Date,Type,Item,Qty,Unit,Site,Ref,Party,Notes\n";
+      [...movs].sort((a,b)=>(b.date||0)-(a.date||0)).forEach(m => {
+        csv += `${this.fmtDate(m.date)},${m.type},"${itemMap[m.itemId]?.name||""}",${m.qty},"${itemMap[m.itemId]?.unit||""}","${siteMap[m.siteId]?.name||""}","${m.refNo||""}","${m.supplier||m.issuedTo||""}","${(m.notes||"").replace(/"/g,'""')}"\n`;
+      });
+    }
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `cims-${kind}-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    this.toast("CSV downloaded");
+  },
+
+  /* =========================================================
+     SETTINGS
+  ========================================================= */
+  async renderSettings(){
+    const auth = await db.getSetting("auth", { username: "admin", password: "admin123" });
+    document.getElementById("main-content").innerHTML = `
+      <div class="settings-grid">
+
+        <div class="setting-card">
+          <h3>💾 Backup Data</h3>
+          <p>Export your entire database as a single JSON file. Keep this safe — it contains everything.</p>
+          <button class="btn btn-primary" onclick="app.exportBackup()">Download Backup</button>
+        </div>
+
+        <div class="setting-card">
+          <h3>♻️ Restore Data</h3>
+          <p>Replace current data with the contents of a backup file. <strong>This overwrites everything.</strong></p>
+          <input type="file" id="restore-file" accept=".json" style="display:none;">
+          <button class="btn btn-secondary" onclick="document.getElementById('restore-file').click()">Choose File…</button>
+        </div>
+
+        <div class="setting-card">
+          <h3>🔑 Change Password</h3>
+          <p>Current username: <code>${auth.username}</code></p>
+          <form id="pw-form">
+            <div class="form-group"><label>Current Password</label><input type="password" name="current" required></div>
+            <div class="form-group"><label>New Password</label><input type="password" name="next" required minlength="4"></div>
+            <button type="submit" class="btn btn-primary">Update Password</button>
+          </form>
+        </div>
+
+        <div class="setting-card" style="border-color:var(--red);">
+          <h3 style="color:var(--red);">⚠️ Danger Zone</h3>
+          <p>Wipe all data and start fresh. This cannot be undone.</p>
+          <button class="btn btn-danger" onclick="app.factoryReset()">Reset Everything</button>
+        </div>
+
+      </div>
+
+      <div class="card" style="margin-top:18px;">
+        <div class="card-title">ℹ️ About</div>
+        <div class="kpi-list">
+          <div class="kpi-row"><span class="lbl">Application</span><span class="val">ConstructionIMS v2</span></div>
+          <div class="kpi-row"><span class="lbl">Storage</span><span class="val">Browser localStorage (offline)</span></div>
+          <div class="kpi-row"><span class="lbl">Database</span><span class="val">${DB_NAME} (v${DB_VERSION})</span></div>
+          <div class="kpi-row"><span class="lbl">Session User</span><span class="val">${this.state.user.name}</span></div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById("restore-file").addEventListener("change", async e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      this.confirm(`This will REPLACE all current data with the contents of ${file.name}. Proceed?`, async () => {
+        try {
+          const text = await file.text();
+          const payload = JSON.parse(text);
+          await db.importAll(payload, { merge: false });
+          this.toast("Backup restored successfully");
+          this.renderSettings();
+        } catch (err){
+          this.toast("Restore failed: " + err.message, "error");
+        }
+      });
+    });
+
+    document.getElementById("pw-form").addEventListener("submit", async e => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const auth = await db.getSetting("auth", { username:"admin", password:"admin123" });
+      if (fd.get("current") !== auth.password){
+        this.toast("Current password is incorrect","error");
+        return;
+      }
+      auth.password = fd.get("next");
+      await db.setSetting("auth", auth);
+      this.toast("Password updated");
+      e.target.reset();
+    });
+  },
+
+  async exportBackup(){
+    const payload = await db.exportAll();
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `cims-backup-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    this.toast("Backup downloaded");
+  },
+
+  factoryReset(){
+    this.confirm("Wipe ALL data — items, movements, sites, projects, POs, tools, settings. This cannot be undone.", async () => {
+      for (const [name] of STORES) await db.clear(name);
+      await db.seedIfEmpty();
+      sessionStorage.removeItem("cims_user");
+      this.toast("Reset complete. Please log in again.","warn");
+      setTimeout(() => location.reload(), 800);
+    });
+  }
+};
+
+window.app = app;
+window.addEventListener("DOMContentLoaded", () => app.init());
+
+</script>
+</body>
+</html>
